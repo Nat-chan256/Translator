@@ -33,7 +33,7 @@ namespace LexicalAnalyzer.Operators
         {
             if (((Operator)this).GetLexeme() == "do")
             {
-                return $"НЦ {label}:";
+                return $"{this.GetCounter()} НЦ {label}:";
             }
             else
             {

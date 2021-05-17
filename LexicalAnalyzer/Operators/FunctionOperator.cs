@@ -38,5 +38,11 @@ namespace LexicalAnalyzer.Operators
         {
             return $"{this.GetCounter()} {functionNumber} {nestingLevel} {this.GetOuterRepresentation()}";
         }
+
+        // Сбрасывает значение переменной functionsCount
+        public static void Reset()
+        {
+            functionsCount = 0;
+        }
     }
 }

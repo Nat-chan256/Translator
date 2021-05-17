@@ -82,6 +82,7 @@ namespace LexicalAnalyzer
             priorityTable.Add("let", 1);
             priorityTable.Add("=", 2);
             priorityTable.Add("+=", 2);
+            priorityTable.Add("-=", 2);
             priorityTable.Add("break", 2);
             priorityTable.Add("continue", 2);
             priorityTable.Add("||", 3);

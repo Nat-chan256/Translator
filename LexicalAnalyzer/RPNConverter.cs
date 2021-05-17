@@ -40,37 +40,14 @@ namespace LexicalAnalyzer
             serviceTablesContainer = ServiceTablesContainer.GetInstance();
         }
 
-        private bool ContainsUnknownLexeme(List<string> lexemesCodesByLines)
-        {
-            foreach (string line in lexemesCodesByLines)
-            {
-                string[] splittedLine = line.Split();
-                foreach (string lexemeCode in splittedLine)
-                {
-                    if (lexemeCode == "Unknown" || lexemeCode == "lexeme")
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         // Перевод списка кодов лексем 
         // lexemesCodesByLines - список строк, где каждая строка может содержать несколько кодов лексем
         public List<List<string>> ConvertToRPN(List<string> lexemesCodesByLines)
         {
-            if (ContainsUnknownLexeme(lexemesCodesByLines))
-            {
-                List<List<string>> res = new List<List<string>>();
-                List<string> innerRes = new List<string>();
-                innerRes.Add("Преобразование невозможно из-за наличия неизвестной лексемы");
-                res.Add(innerRes);
-                return res;
-            }
-
             CurrentFunctionNumber = 0;
             currentNestingLevel = 1;
+            FunctionOperator.Reset();
+            LabelsManager.Reset();
 
             List<List<string>> result = new List<List<string>>();
 
@@ -83,7 +60,7 @@ namespace LexicalAnalyzer
                 }
                 List<string> resultLine = new List<string>(); // Результат перевода текущей строки в ОПЗ
                 string[] lexemesCodesInCurLine = line.Split(); // Преобразовываем строку в массив кодов лексем
-                for (int i = 0; i < lexemesCodesInCurLine.Length; ++i) 
+                for (int i = 0; i < lexemesCodesInCurLine.Length; ++i)
                 {
                     if (lexemesCodesInCurLine[i].Length == 0)
                     {
@@ -140,8 +117,12 @@ namespace LexicalAnalyzer
                             operatorsStack.Push(new CycleOperator(lexeme));
                             if (lexeme == "do")
                             {
-                                resultLine.Add(operatorsStack.GetElememt().GetLexeme());
+                                resultLine.Add(((CycleOperator)operatorsStack.GetElememt()).GetLexeme());
                             }
+                        }
+                        else if (lexeme == ";")
+                        {
+                            continue;
                         }
                         else
                         {
@@ -150,7 +131,7 @@ namespace LexicalAnalyzer
                     }
                     else if (lexeme == "(")
                     {
-                        if (operatorsStack.GetElememt() is FunctionOperator 
+                        if (operatorsStack.GetElememt() is FunctionOperator
                             || operatorsStack.GetElememt() is IfOperator
                             || operatorsStack.GetElememt() is CycleOperator)
                         {
@@ -168,27 +149,20 @@ namespace LexicalAnalyzer
                     }
                     else if (lexeme == ")")
                     {
-                        // Обработка циклов for и do...while
-                        if (operatorsStack.GetElememt() is CycleOperator)
+                        if (!operatorsStack.IsEmpty()
+                            && operatorsStack.GetElememt() is CycleOperator
+                            && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "for")
                         {
-                            if (((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "for")
-                            {
-                                resultLine.Add("ПЧЦ");
-                            }
-                            else // lexeme == "do"
-                            {
-                                resultLine.Add($"УПИ {((CycleOperator)operatorsStack.GetElememt()).GetLabel()} КЦ");
-                                operatorsStack.Pop();
-                                continue;
-                            }
+                            resultLine.Add("ПЧЦ");
                         }
+
                         while (!operatorsStack.IsEmpty()
-                            && operatorsStack.GetElememt().GetLexeme() != "("
-                            && operatorsStack.GetElememt().GetLexeme() != "Ф"
-                            && !(operatorsStack.GetElememt() is IfOperator)
-                            && !(operatorsStack.GetElememt() is FunctionOperator)
-                            && !(operatorsStack.GetElememt() is CycleOperator)
-                            )
+                        && operatorsStack.GetElememt().GetLexeme() != "("
+                        && operatorsStack.GetElememt().GetLexeme() != "Ф"
+                        && !(operatorsStack.GetElememt() is IfOperator)
+                        && !(operatorsStack.GetElememt() is FunctionOperator)
+                        && !(operatorsStack.GetElememt() is CycleOperator)
+                        )
                         {
                             resultLine.Add(operatorsStack.Pop().GetLexeme());
                         }
@@ -198,6 +172,14 @@ namespace LexicalAnalyzer
                             continue;
                         }
                         Operator op = operatorsStack.GetElememt();
+
+
+                        if (op is CycleOperator && ((CycleOperator)op).GetInnerRepresentation() == "do")
+                        {
+                            resultLine.Add($"УПИ {((CycleOperator)op).GetLabel()} КЦ");
+                            operatorsStack.Pop();
+                            continue;
+                        }
 
                         if (op.GetLexeme() == "Ф") // Добавление оператора Ф в выходную строку
                         {
@@ -316,13 +298,14 @@ namespace LexicalAnalyzer
                         {
                             resultLine.Add(operatorsStack.Pop().GetLexeme());
                         }
-                        resultLine.Add($"{((IfOperator)operatorsStack.GetElememt()).GetLabelIPL()} " +
+                        resultLine.Add($"{((IfOperator)operatorsStack.GetElememt()).GetLabelUPI()} " +
                             $"БП {((IfOperator)operatorsStack.GetElememt()).GetLabelUPL()}:");
                     }
                     else if (lexeme == "}")
                     {
                         if (findNextLexeme(j, i, lexemesCodesByLines) == "else")
                         {
+                            ((IfOperator)operatorsStack.GetElememt()).SetHasElseBranch(true);
                             continue;
                         }
                         while (!operatorsStack.IsEmpty()
@@ -335,20 +318,30 @@ namespace LexicalAnalyzer
                         }
                         if (!operatorsStack.IsEmpty())
                         {
-                            Operator op = operatorsStack.Pop(); // Удаляем оператор if либо function из стэка
+                            Operator op = operatorsStack.GetElememt();
                             if (op is IfOperator)
                             {
-                                resultLine.Add($"{IfOperator.GetLastLabel()}:");
+                                if (((IfOperator)op).HasElseBrach())
+                                {
+                                    resultLine.Add($"{((IfOperator)op).GetLabelUPI()}:");
+                                }
+                                else
+                                {
+                                    resultLine.Add($"{((IfOperator)op).GetLabelUPL()}:");
+                                }
+                                operatorsStack.Pop();
                             }
                             else if (op is FunctionOperator)
                             {
                                 currentNestingLevel--;
                                 currentFunctionNumber = functionsDictionary[currentFunctionNumber];
                                 resultLine.Add("КФ");
+                                operatorsStack.Pop();
                             }
                             else if (op is CycleOperator && ((CycleOperator)op).GetInnerRepresentation() != "do")
                             {
                                 resultLine.Add("КЦ");
+                                operatorsStack.Pop();
                             }
                         }
                     }
@@ -369,7 +362,7 @@ namespace LexicalAnalyzer
                     else if (lexeme == ";")
                     {
                         // Обработка пустой части цикла for
-                        if (operatorsStack.GetElememt() is CycleOperator)
+                        if (operatorsStack.GetElememt() is CycleOperator && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "for")
                         {
                             resultLine.Add("ПЧЦ");
                             ((OperatorWithCounter)operatorsStack.GetElememt()).IncreaseCounter();
@@ -399,10 +392,12 @@ namespace LexicalAnalyzer
                         }
 
                     }
-                    else if (lexeme == "for" || lexeme == "while")
+                    else if (lexeme == "for" || lexeme == "while" || lexeme == "do")
                     {
-                        if (!(operatorsStack.GetElememt() is CycleOperator)
-                            && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() != "do")
+                        if (!(
+                            (operatorsStack.GetElememt() is CycleOperator)
+                            && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "do"
+                            ))
                         {
                             operatorsStack.Push(new CycleOperator(lexeme));
                         }
@@ -424,10 +419,10 @@ namespace LexicalAnalyzer
                         }
                         // Операция из входной строки проталкивается в стек
                         operatorsStack.Push(new Operator(lexeme));
-                    }    
+                    }
                 }
 
-                if (j == lexemesCodesByLines.Count-1) // Если строка последняя
+                if (j == lexemesCodesByLines.Count - 1) // Если строка последняя
                 {
                     // Добавляем все оставшиеся в стеке операции в выходную строку
                     while (!operatorsStack.IsEmpty())
@@ -438,6 +433,8 @@ namespace LexicalAnalyzer
 
                 result.Add(resultLine);
             }
+
+            result = RemoveEmptyLines(result);
 
             return result;
         }
@@ -459,7 +456,7 @@ namespace LexicalAnalyzer
                 }
                 else
                 {
-                    int curIndex = i+1;
+                    int curIndex = i + 1;
                     while (curIndex < lexemesCodesByLines.Count
                         && lexemesCodesByLines[curIndex].Split()[0] == "")
                     {
@@ -478,7 +475,7 @@ namespace LexicalAnalyzer
         private bool IsFunction(int _lexemeCodeIndex, string[] _line)
         {
             return _line[_lexemeCodeIndex][0] == 'I'
-                && _lexemeCodeIndex < _line.Length - 1 
+                && _lexemeCodeIndex < _line.Length - 1
                 && serviceTablesContainer.GetLexemeByCode(_line[_lexemeCodeIndex + 1]) == "(";
         }
 
@@ -503,5 +500,19 @@ namespace LexicalAnalyzer
             return false;
         }
 
+        // Удаляет внутренние списки, которые содержат только один элемент ""
+        private List<List<string>> RemoveEmptyLines(List<List<string>> text)
+        {
+            List<List<string>> result = new List<List<string>>();
+            foreach (List<string> line in text)
+            {
+                if (line.Count == 0)
+                {
+                    continue;
+                }
+                result.Add(line);
+            }
+            return result;
+        }
     }
 }

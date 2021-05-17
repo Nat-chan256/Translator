@@ -20,5 +20,11 @@ namespace LexicalAnalyzer
         {
             return $"М{++labelsCount}";
         }
+
+        // Сбрасывает значение переменной labelsCount
+        public static void Reset()
+        {
+            labelsCount = 0;
+        }
     }
 }
