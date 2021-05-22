@@ -60,6 +60,7 @@
     <Compile Include="Operators\Operator.cs" />
     <Compile Include="OperatorsStack.cs" />
     <Compile Include="RPNConverter.cs" />
+    <Compile Include="RPNtoBasicConverter.cs" />
     <Compile Include="ServiceTablesContainer.cs" />
     <Compile Include="States\DigitsPointState.cs" />
     <Compile Include="States\DigitsState.cs" />

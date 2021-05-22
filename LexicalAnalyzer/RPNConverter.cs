@@ -25,7 +25,7 @@ namespace LexicalAnalyzer
         private int currentNestingLevel;
 
         // Словарь, в котором ключи - номера функций, а значения - соответствующие им номера внешних функций, в которые они непосредственно вложены
-        private Dictionary<int, int> functionsDictionary;
+        private readonly Dictionary<int, int> functionsDictionary;
 
         // Стек операторов
         private OperatorsStack operatorsStack;

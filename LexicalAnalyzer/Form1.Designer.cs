@@ -63,6 +63,13 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.rtbRPN = new System.Windows.Forms.RichTextBox();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btnExecuteBasicTranslationTab = new System.Windows.Forms.Button();
+            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+            this.rtbRPNBasicTranslationTab = new System.Windows.Forms.RichTextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
+            this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -81,6 +88,11 @@
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
+            this.splitContainer3.Panel1.SuspendLayout();
+            this.splitContainer3.Panel2.SuspendLayout();
+            this.splitContainer3.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -214,6 +226,7 @@
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 24);
             this.tabControl1.Name = "tabControl1";
@@ -434,6 +447,87 @@
             this.rtbRPN.TabIndex = 0;
             this.rtbRPN.Text = "";
             // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.btnExecuteBasicTranslationTab);
+            this.tabPage4.Controls.Add(this.splitContainer3);
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Size = new System.Drawing.Size(1276, 527);
+            this.tabPage4.TabIndex = 3;
+            this.tabPage4.Text = "Перевод в Basic";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btnExecuteBasicTranslationTab
+            // 
+            this.btnExecuteBasicTranslationTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.btnExecuteBasicTranslationTab.Location = new System.Drawing.Point(1119, 471);
+            this.btnExecuteBasicTranslationTab.Name = "btnExecuteBasicTranslationTab";
+            this.btnExecuteBasicTranslationTab.Size = new System.Drawing.Size(149, 38);
+            this.btnExecuteBasicTranslationTab.TabIndex = 1;
+            this.btnExecuteBasicTranslationTab.Text = "Выполнить";
+            this.btnExecuteBasicTranslationTab.UseVisualStyleBackColor = true;
+            this.btnExecuteBasicTranslationTab.Click += new System.EventHandler(this.btnExecuteBasicTranslationTab_Click);
+            // 
+            // splitContainer3
+            // 
+            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer3.Name = "splitContainer3";
+            // 
+            // splitContainer3.Panel1
+            // 
+            this.splitContainer3.Panel1.Controls.Add(this.rtbRPNBasicTranslationTab);
+            this.splitContainer3.Panel1.Controls.Add(this.label10);
+            // 
+            // splitContainer3.Panel2
+            // 
+            this.splitContainer3.Panel2.Controls.Add(this.richTextBox2);
+            this.splitContainer3.Panel2.Controls.Add(this.label11);
+            this.splitContainer3.Size = new System.Drawing.Size(1276, 465);
+            this.splitContainer3.SplitterDistance = 571;
+            this.splitContainer3.TabIndex = 0;
+            // 
+            // rtbRPNBasicTranslationTab
+            // 
+            this.rtbRPNBasicTranslationTab.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.rtbRPNBasicTranslationTab.Location = new System.Drawing.Point(0, 23);
+            this.rtbRPNBasicTranslationTab.Name = "rtbRPNBasicTranslationTab";
+            this.rtbRPNBasicTranslationTab.Size = new System.Drawing.Size(571, 442);
+            this.rtbRPNBasicTranslationTab.TabIndex = 1;
+            this.rtbRPNBasicTranslationTab.Text = "";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label10.Location = new System.Drawing.Point(0, 0);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(215, 20);
+            this.label10.TabIndex = 0;
+            this.label10.Text = "Обратная польская запись";
+            // 
+            // richTextBox2
+            // 
+            this.richTextBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTextBox2.Location = new System.Drawing.Point(0, 23);
+            this.richTextBox2.Name = "richTextBox2";
+            this.richTextBox2.Size = new System.Drawing.Size(701, 442);
+            this.richTextBox2.TabIndex = 1;
+            this.richTextBox2.Text = "";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label11.Location = new System.Drawing.Point(0, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(255, 20);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "Текст программы на языке Basic";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -469,6 +563,13 @@
             this.splitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
+            this.tabPage4.ResumeLayout(false);
+            this.splitContainer3.Panel1.ResumeLayout(false);
+            this.splitContainer3.Panel1.PerformLayout();
+            this.splitContainer3.Panel2.ResumeLayout(false);
+            this.splitContainer3.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
+            this.splitContainer3.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -511,6 +612,13 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.RichTextBox rtbRPN;
+        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.SplitContainer splitContainer3;
+        private System.Windows.Forms.RichTextBox rtbRPNBasicTranslationTab;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.RichTextBox richTextBox2;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Button btnExecuteBasicTranslationTab;
     }
 }
 

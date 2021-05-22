@@ -24,7 +24,7 @@ namespace LexicalAnalyzer
 
         public new string GetLexeme()
         {
-            return $"{currentFunctionNumber} {currentNestingLevel} {this.GetOuterRepresentation()}";
+            return $"{this.GetCounter()} {currentFunctionNumber} {currentNestingLevel} {this.GetOuterRepresentation()}";
         }
     }
 }

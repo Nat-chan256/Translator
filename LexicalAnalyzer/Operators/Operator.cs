@@ -63,47 +63,49 @@ namespace LexicalAnalyzer
         // Заполнение таблицы приоритетов
         private static void FillPriorityTable()
         {
-            priorityTable = new Dictionary<string, int>();
-            priorityTable.Add("if", 0);
-            priorityTable.Add("(", 0);
-            priorityTable.Add("[", 0);
-            priorityTable.Add("АЭМ", 0);
-            priorityTable.Add("Ф", 0);
-            priorityTable.Add("for", 0);
-            priorityTable.Add("while", 0);
-            priorityTable.Add("do", 0);
-            priorityTable.Add(")", 1);
-            priorityTable.Add("]", 1);
-            priorityTable.Add("[]", 1);
-            priorityTable.Add(",", 1);
-            priorityTable.Add(";", 1);
-            priorityTable.Add("else", 1);
-            priorityTable.Add("var", 1);
-            priorityTable.Add("let", 1);
-            priorityTable.Add("=", 2);
-            priorityTable.Add("+=", 2);
-            priorityTable.Add("-=", 2);
-            priorityTable.Add("break", 2);
-            priorityTable.Add("continue", 2);
-            priorityTable.Add("||", 3);
-            priorityTable.Add("&&", 4);
-            priorityTable.Add("!", 5);
-            priorityTable.Add("<", 6);
-            priorityTable.Add(">", 6);
-            priorityTable.Add("<=", 6);
-            priorityTable.Add(">=", 6);
-            priorityTable.Add("==", 6);
-            priorityTable.Add("+", 7);
-            priorityTable.Add("-", 7);
-            priorityTable.Add("*", 8);
-            priorityTable.Add("/", 8);
-            priorityTable.Add("%", 8);
-            priorityTable.Add("**", 9);
-            priorityTable.Add("++", 10);
-            priorityTable.Add(":", 11);
-            priorityTable.Add("function", 11);
-            priorityTable.Add("}", 11);
-            priorityTable.Add("return", 12);
+            priorityTable = new Dictionary<string, int>
+            {
+                { "if", 0 },
+                { "(", 0 },
+                { "[", 0 },
+                { "АЭМ", 0 },
+                { "Ф", 0 },
+                { "for", 0 },
+                { "while", 0 },
+                { "do", 0 },
+                { ")", 1 },
+                { "]", 1 },
+                { "[]", 1 },
+                { ",", 1 },
+                { ";", 1 },
+                { "else", 1 },
+                { "var", 1 },
+                { "let", 1 },
+                { "=", 2 },
+                { "+=", 2 },
+                { "-=", 2 },
+                { "break", 2 },
+                { "continue", 2 },
+                { "||", 3 },
+                { "&&", 4 },
+                { "!", 5 },
+                { "<", 6 },
+                { ">", 6 },
+                { "<=", 6 },
+                { ">=", 6 },
+                { "==", 6 },
+                { "+", 7 },
+                { "-", 7 },
+                { "*", 8 },
+                { "/", 8 },
+                { "%", 8 },
+                { "**", 9 },
+                { "++", 10 },
+                { ":", 11 },
+                { "function", 11 },
+                { "}", 11 },
+                { "return", 12 }
+            };
         }
     }
 }

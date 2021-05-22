@@ -16,6 +16,9 @@ namespace LexicalAnalyzer
         // Преобразователь в обратную польскую нотацию
         private RPNConverter rpnConverter;
 
+        // Преобразователь ОПЗ в программу на Basic
+        private RPNtoBasicConverter rpnToBasicConverter;
+
         public Form1()
         {
             InitializeComponent();
@@ -41,6 +44,8 @@ namespace LexicalAnalyzer
 
             // Инициализация преобразователя в польскую нотацию
             rpnConverter = new RPNConverter();
+
+            rpnToBasicConverter = new RPNtoBasicConverter();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -262,6 +267,33 @@ namespace LexicalAnalyzer
                 foreach (string word in line)
                     rtbRPN.Text += (word + " ");
                 rtbRPN.Text += "\n";
+            }
+        }
+
+
+        //======================================Вкладка "Перевод в ОПЗ"====================================
+        private void btnExecuteBasicTranslationTab_Click(object sender, EventArgs e)
+        {
+            List<string> rpn = new List<string>();
+
+            string[] rpnFromTextBox = rtbRPNBasicTranslationTab.Text.Split('\n');
+            foreach (string line in rpnFromTextBox)
+            {
+                string[] words = line.Split();
+                foreach (string word in words)
+                {
+                    rpn.Add(word);
+                }
+            }
+
+            List<List<string>> basicCode = rpnToBasicConverter.ConvertToBasic(rpn);
+
+            rtbBasic.Clear();
+            foreach (List<string> line in basicCode)
+            {
+                foreach (string word in line)
+                    rtbBasic.Text += (word + " ");
+                rtbBasic.Text += "\n";
             }
         }
 

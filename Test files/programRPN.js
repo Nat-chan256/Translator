@@ -8,6 +8,7 @@ function sum(a, b)
 	return s;
 }
 
+let v1 = 3, v2;
 let arr = [1, 2, 3];
 
 for (var i = 0; i < 3; ++i)
@@ -28,7 +29,7 @@ while (i > 0);
 
 if (arr[2] % 2 == 0)
 {
-	arr[2] += 1;
+	arr[2] = sum(arr[0], arr[1]);
 }
 else
 {
