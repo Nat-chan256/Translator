@@ -271,7 +271,7 @@ namespace LexicalAnalyzer
         }
 
 
-        //======================================Вкладка "Перевод в ОПЗ"====================================
+        //======================================Вкладка "Перевод в Basic"====================================
         private void btnExecuteBasicTranslationTab_Click(object sender, EventArgs e)
         {
             List<string> rpn = new List<string>();
@@ -320,5 +320,7 @@ namespace LexicalAnalyzer
         {
             bExecuteRPN.Enabled = _value;
         }
+
+        
     }
 }
