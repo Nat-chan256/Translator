@@ -373,6 +373,7 @@ namespace LexicalAnalyzer
                             && !(operatorsStack.GetElememt() is IfOperator)
                             && !(operatorsStack.GetElememt() is FunctionOperator)
                             && !(operatorsStack.GetElememt() is CycleOperator)
+                            && !(operatorsStack.GetElememt().GetLexeme() == "return")
                             )
                         {
                             resultLine.Add(operatorsStack.Pop().GetLexeme());
@@ -385,12 +386,16 @@ namespace LexicalAnalyzer
                         {
                             // Извлекаем КО оператор
                             resultLine.Add(((VariableDeclarationOperator)operatorsStack.Pop()).GetLexeme());
+                            continue;
                         }
                         if (!operatorsStack.IsEmpty() && operatorsStack.GetElememt() is CycleOperator)
                         {
                             ((CycleOperator)operatorsStack.GetElememt()).IncreaseCounter();
                         }
-
+                        if (operatorsStack.GetElememt().GetLexeme() == "return")
+                        {
+                            resultLine.Add(operatorsStack.Pop().GetLexeme());
+                        }
                     }
                     else if (lexeme == "for" || lexeme == "while" || lexeme == "do")
                     {
@@ -401,6 +406,10 @@ namespace LexicalAnalyzer
                         {
                             operatorsStack.Push(new CycleOperator(lexeme));
                         }
+                    }
+                    else if (lexeme == "return")
+                    {
+                        operatorsStack.Push(new Operator(lexeme));
                     }
                     else if (new Operator(lexeme).GetPriority() == null)
                     {

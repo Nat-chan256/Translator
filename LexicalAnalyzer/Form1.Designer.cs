@@ -68,7 +68,7 @@
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.rtbRPNBasicTranslationTab = new System.Windows.Forms.RichTextBox();
             this.label10 = new System.Windows.Forms.Label();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
+            this.rtbBasic = new System.Windows.Forms.RichTextBox();
             this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -110,8 +110,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.label7);
             this.splitContainer1.Panel2.Controls.Add(this.rtbLexemes);
-            this.splitContainer1.Size = new System.Drawing.Size(1270, 454);
-            this.splitContainer1.SplitterDistance = 624;
+            this.splitContainer1.Size = new System.Drawing.Size(1055, 454);
+            this.splitContainer1.SplitterDistance = 518;
             this.splitContainer1.TabIndex = 0;
             // 
             // label6
@@ -131,7 +131,7 @@
             this.rtbSourceCode.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbSourceCode.Location = new System.Drawing.Point(0, 23);
             this.rtbSourceCode.Name = "rtbSourceCode";
-            this.rtbSourceCode.Size = new System.Drawing.Size(624, 431);
+            this.rtbSourceCode.Size = new System.Drawing.Size(518, 431);
             this.rtbSourceCode.TabIndex = 0;
             this.rtbSourceCode.Text = "";
             // 
@@ -154,7 +154,7 @@
             this.rtbLexemes.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbLexemes.Location = new System.Drawing.Point(0, 23);
             this.rtbLexemes.Name = "rtbLexemes";
-            this.rtbLexemes.Size = new System.Drawing.Size(642, 431);
+            this.rtbLexemes.Size = new System.Drawing.Size(640, 431);
             this.rtbLexemes.TabIndex = 0;
             this.rtbLexemes.Text = "";
             // 
@@ -165,7 +165,7 @@
             this.выходToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1284, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1069, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -213,7 +213,7 @@
             // bExecute
             // 
             this.bExecute.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.bExecute.Location = new System.Drawing.Point(1139, 472);
+            this.bExecute.Location = new System.Drawing.Point(924, 463);
             this.bExecute.Name = "bExecute";
             this.bExecute.Size = new System.Drawing.Size(131, 34);
             this.bExecute.TabIndex = 2;
@@ -231,7 +231,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 24);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1284, 553);
+            this.tabControl1.Size = new System.Drawing.Size(1069, 549);
             this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
@@ -241,7 +241,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1276, 527);
+            this.tabPage1.Size = new System.Drawing.Size(1061, 523);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Лексический анализатор";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -261,7 +261,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1276, 527);
+            this.tabPage2.Size = new System.Drawing.Size(1061, 523);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Служебные таблицы";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -371,7 +371,7 @@
             this.tabPage3.Controls.Add(this.splitContainer2);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1276, 527);
+            this.tabPage3.Size = new System.Drawing.Size(1061, 523);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Перевод в ОПЗ";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -379,7 +379,7 @@
             // bExecuteRPN
             // 
             this.bExecuteRPN.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.bExecuteRPN.Location = new System.Drawing.Point(1136, 462);
+            this.bExecuteRPN.Location = new System.Drawing.Point(921, 462);
             this.bExecuteRPN.Name = "bExecuteRPN";
             this.bExecuteRPN.Size = new System.Drawing.Size(132, 36);
             this.bExecuteRPN.TabIndex = 1;
@@ -402,8 +402,8 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.label9);
             this.splitContainer2.Panel2.Controls.Add(this.rtbRPN);
-            this.splitContainer2.Size = new System.Drawing.Size(1276, 456);
-            this.splitContainer2.SplitterDistance = 602;
+            this.splitContainer2.Size = new System.Drawing.Size(1061, 456);
+            this.splitContainer2.SplitterDistance = 500;
             this.splitContainer2.TabIndex = 0;
             // 
             // rtbSourceCodeRPN
@@ -412,7 +412,7 @@
             this.rtbSourceCodeRPN.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbSourceCodeRPN.Location = new System.Drawing.Point(0, 23);
             this.rtbSourceCodeRPN.Name = "rtbSourceCodeRPN";
-            this.rtbSourceCodeRPN.Size = new System.Drawing.Size(602, 433);
+            this.rtbSourceCodeRPN.Size = new System.Drawing.Size(500, 433);
             this.rtbSourceCodeRPN.TabIndex = 1;
             this.rtbSourceCodeRPN.Text = "";
             // 
@@ -443,7 +443,7 @@
             this.rtbRPN.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbRPN.Location = new System.Drawing.Point(0, 23);
             this.rtbRPN.Name = "rtbRPN";
-            this.rtbRPN.Size = new System.Drawing.Size(670, 433);
+            this.rtbRPN.Size = new System.Drawing.Size(557, 433);
             this.rtbRPN.TabIndex = 0;
             this.rtbRPN.Text = "";
             // 
@@ -453,7 +453,7 @@
             this.tabPage4.Controls.Add(this.splitContainer3);
             this.tabPage4.Location = new System.Drawing.Point(4, 22);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1276, 527);
+            this.tabPage4.Size = new System.Drawing.Size(1061, 523);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Перевод в Basic";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -461,7 +461,7 @@
             // btnExecuteBasicTranslationTab
             // 
             this.btnExecuteBasicTranslationTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.btnExecuteBasicTranslationTab.Location = new System.Drawing.Point(1119, 471);
+            this.btnExecuteBasicTranslationTab.Location = new System.Drawing.Point(904, 471);
             this.btnExecuteBasicTranslationTab.Name = "btnExecuteBasicTranslationTab";
             this.btnExecuteBasicTranslationTab.Size = new System.Drawing.Size(149, 38);
             this.btnExecuteBasicTranslationTab.TabIndex = 1;
@@ -482,18 +482,19 @@
             // 
             // splitContainer3.Panel2
             // 
-            this.splitContainer3.Panel2.Controls.Add(this.richTextBox2);
+            this.splitContainer3.Panel2.Controls.Add(this.rtbBasic);
             this.splitContainer3.Panel2.Controls.Add(this.label11);
-            this.splitContainer3.Size = new System.Drawing.Size(1276, 465);
-            this.splitContainer3.SplitterDistance = 571;
+            this.splitContainer3.Size = new System.Drawing.Size(1061, 465);
+            this.splitContainer3.SplitterDistance = 474;
             this.splitContainer3.TabIndex = 0;
             // 
             // rtbRPNBasicTranslationTab
             // 
             this.rtbRPNBasicTranslationTab.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.rtbRPNBasicTranslationTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbRPNBasicTranslationTab.Location = new System.Drawing.Point(0, 23);
             this.rtbRPNBasicTranslationTab.Name = "rtbRPNBasicTranslationTab";
-            this.rtbRPNBasicTranslationTab.Size = new System.Drawing.Size(571, 442);
+            this.rtbRPNBasicTranslationTab.Size = new System.Drawing.Size(474, 442);
             this.rtbRPNBasicTranslationTab.TabIndex = 1;
             this.rtbRPNBasicTranslationTab.Text = "";
             // 
@@ -508,14 +509,15 @@
             this.label10.TabIndex = 0;
             this.label10.Text = "Обратная польская запись";
             // 
-            // richTextBox2
+            // rtbBasic
             // 
-            this.richTextBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.richTextBox2.Location = new System.Drawing.Point(0, 23);
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(701, 442);
-            this.richTextBox2.TabIndex = 1;
-            this.richTextBox2.Text = "";
+            this.rtbBasic.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.rtbBasic.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.rtbBasic.Location = new System.Drawing.Point(0, 23);
+            this.rtbBasic.Name = "rtbBasic";
+            this.rtbBasic.Size = new System.Drawing.Size(583, 442);
+            this.rtbBasic.TabIndex = 1;
+            this.rtbBasic.Text = "";
             // 
             // label11
             // 
@@ -532,7 +534,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1284, 577);
+            this.ClientSize = new System.Drawing.Size(1069, 573);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -616,7 +618,7 @@
         private System.Windows.Forms.SplitContainer splitContainer3;
         private System.Windows.Forms.RichTextBox rtbRPNBasicTranslationTab;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.RichTextBox richTextBox2;
+        private System.Windows.Forms.RichTextBox rtbBasic;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button btnExecuteBasicTranslationTab;
     }

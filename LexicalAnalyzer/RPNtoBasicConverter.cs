@@ -1,5 +1,6 @@
 ﻿using _1lab;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace LexicalAnalyzer
 {
@@ -15,9 +16,10 @@ namespace LexicalAnalyzer
         public List<List<string>> ConvertToBasic(List<string> rpn)
         {
             List<List<string>> result = new List<List<string>>();
-            foreach (string element in rpn)
+            for (int i = 0; i < rpn.Count; ++i)
             {
-                if (IsIdentifier(element) || IsConstant(element))
+                string element = rpn[i];
+                if (IsIdentifier(element) || IsConstant(element) || IsNumber(element))
                 {
                     constantsAndIdentifiersStack.Push(element);
                     continue;
@@ -29,13 +31,13 @@ namespace LexicalAnalyzer
                 }
                 else if (element == "КФ")
                 {
-                    result = ProcessFunctionEnd(result);
+                    result = ProcessFunctionEnd(i, rpn, result);
                 }
                 else if (element == "КО")
                 {
-                    result = ProcessVariableDeclaration(result);
+                    result = ProcessVariableDeclaration(i, rpn, result);
                 }
-                else if (element == "УПЛ")
+                /*else if (element == "УПЛ")
                 {
                     result = processIfStatement(result);
                 }
@@ -50,10 +52,34 @@ namespace LexicalAnalyzer
                 else if (element == "=")
                 {
                     result = processAssignmentOperator(result);
-                }
+                }*/
             }
 
             return result;
+        }
+
+        // Нахождение имени функции по индексу её конца
+        private string FindFunctionName(int _functionEndPosition, List<string> _rpn)
+        {
+            // Уровень вложенности относительно искомой функции
+            int currentLevel = 0;
+            for (int i = _functionEndPosition - 1; i >= 0; --i)
+            {
+                if (_rpn[i] == "КФ")
+                {
+                    currentLevel++;
+                }
+                else if (_rpn[i] == "НФ" && currentLevel == 0)
+                {
+                    int counter = int.Parse(_rpn[i - 3]);
+                    return _rpn[i - counter - 3];
+                }
+                else if (_rpn[i] == "НФ")
+                {
+                    currentLevel--;
+                }
+            }
+            return "";
         }
 
         private bool IsBinaryOperator(string _element)
@@ -72,6 +98,18 @@ namespace LexicalAnalyzer
         private bool IsIdentifier(string _element)
         {
             return ServiceTablesContainer.GetInstance().GetIdentifiersTable().ContainsKey(_element);
+        }
+
+        private bool IsNumber(string _element)
+        {
+            foreach (char ch in _element)
+            {
+                if (!char.IsDigit(ch))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private bool IsPrcedure(string _functionName, List<string> _rpn)
@@ -166,19 +204,95 @@ namespace LexicalAnalyzer
             return _currentCode;
         }
 
-        private List<List<string>> ProcessFunctionEnd(List<List<string>> _currentCode)
+        private List<List<string>> ProcessFunctionEnd(int _functionEndIndex, List<string> _rpn, List<List<string>> _currentCode)
         {
-            _currentCode.Add(new List<string>() {"End"});
+            string functionName = FindFunctionName(_functionEndIndex, _rpn);
+            List<string> newLine = new List<string> { "End"};
+            if (IsPrcedure(functionName, _rpn))
+            {
+                newLine.Add("Sub");
+            }
+            else
+            {
+                newLine.Add("Function");
+            }
+
+            _currentCode.Add(newLine);
             return _currentCode;
         }
 
-        private List<List<string>> ProcessVariableDeclaration(List<List<string>> _currentCode)
+        private List<List<string>> ProcessVariableDeclaration(int _declarationEndIndex, List<string> _rpn, List<List<string>> _currentCode)
         { 
             int level = int.Parse(constantsAndIdentifiersStack.Pop());
             int functionNumber = int.Parse(constantsAndIdentifiersStack.Pop());
-            int operandsNumber = int.Parse(constantsAndIdentifiersStack.Pop());
+            int operandsCounter = int.Parse(constantsAndIdentifiersStack.Pop());
 
+            List<string> lineWithVarDeclaration = new List<string> { "Dim" };
+            // Вспомогательная переменная для того, чтобы отличать объявленные переменные 
+            // от операндов выражений
+            int counter = 0;
+            List<string> variables = new List<string>();
+            OrderedDictionary variablesToSet = new OrderedDictionary();
+            bool isEspressionPart = false;
+            Expression currentExpression = new Expression();
+            for (int i = _declarationEndIndex - 4; i >= 0 && variables.Count < operandsCounter; --i)
+            {
+                if (IsIdentifier(_rpn[i]))
+                {
+                    if (counter < 0)
+                    {
+                        counter++;
+                    }
+                    if (counter == 0)
+                    {
+                        variables.Add(_rpn[i]);
+                        if (isEspressionPart)
+                        {
+                            isEspressionPart = false;
+                            variablesToSet.Add(_rpn[i], currentExpression);
+                            currentExpression = new Expression();
+                        }
+                    }
+                }
+                else if (_rpn[i] == "=" || IsBinaryOperator(_rpn[i]))
+                {
+                    counter--;
+                    isEspressionPart = true;
+                }
 
+                if (isEspressionPart && _rpn[i] != "=")
+                {
+                    currentExpression.AddPart(_rpn[i]);
+                    counter++;
+                }
+            }
+
+            // Добавляем объявление переменных
+            variables.Reverse();
+            for (int i = 0; i < variables.Count; ++i)
+            {
+                lineWithVarDeclaration.Add(variables[i]);
+                if (i < variables.Count - 1)
+                {
+                    lineWithVarDeclaration.Add(",");
+                }
+            }
+            lineWithVarDeclaration.Add("As");
+            lineWithVarDeclaration.Add("Variant");
+            _currentCode.Add(lineWithVarDeclaration);
+
+            // Добавляем инициализацию переменных
+            string[] keys = new string[variablesToSet.Count];
+            Expression[] values = new Expression[variablesToSet.Count];
+            variablesToSet.Keys.CopyTo(keys, 0);
+            variablesToSet.Values.CopyTo(values, 0);
+
+            for(int i = variablesToSet.Count-1; i >= 0; --i)
+            {
+                _currentCode.Add(new List<string> { keys[i], "=", values[i].ToString() });
+            }
+
+            return _currentCode;
         }
     }
 }

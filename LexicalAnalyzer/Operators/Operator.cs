@@ -73,6 +73,7 @@ namespace LexicalAnalyzer
                 { "for", 0 },
                 { "while", 0 },
                 { "do", 0 },
+                { "return", 0 },
                 { ")", 1 },
                 { "]", 1 },
                 { "[]", 1 },
@@ -103,8 +104,7 @@ namespace LexicalAnalyzer
                 { "++", 10 },
                 { ":", 11 },
                 { "function", 11 },
-                { "}", 11 },
-                { "return", 12 }
+                { "}", 11 }
             };
         }
     }

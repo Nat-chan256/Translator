@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expression.cs" />
     <Compile Include="Operators\ArrayOperator.cs" />
     <Compile Include="Operators\CycleOperator.cs" />
     <Compile Include="Operators\FunctionOperator.cs" />

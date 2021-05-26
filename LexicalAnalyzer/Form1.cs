@@ -268,24 +268,33 @@ namespace LexicalAnalyzer
                     rtbRPN.Text += (word + " ");
                 rtbRPN.Text += "\n";
             }
+
+            // Записываем ОПЗ в следующую вкладку
+            rtbRPNBasicTranslationTab.Clear();
+            foreach (List<string> line in rpn)
+            {
+                foreach (string word in line)
+                {
+                    rtbRPNBasicTranslationTab.Text += word + " ";
+                }
+                rtbRPNBasicTranslationTab.Text += "\n";
+            }
+
+            // Сохраняем ОПЗ в качестве поля класса
+            this.rpn = new List<string>();
+            foreach (List<string> line in rpn)
+            {
+                foreach (string word in line)
+                {
+                    this.rpn.Add(word);
+                }
+            }
         }
 
 
         //======================================Вкладка "Перевод в Basic"====================================
         private void btnExecuteBasicTranslationTab_Click(object sender, EventArgs e)
         {
-            List<string> rpn = new List<string>();
-
-            string[] rpnFromTextBox = rtbRPNBasicTranslationTab.Text.Split('\n');
-            foreach (string line in rpnFromTextBox)
-            {
-                string[] words = line.Split();
-                foreach (string word in words)
-                {
-                    rpn.Add(word);
-                }
-            }
-
             List<List<string>> basicCode = rpnToBasicConverter.ConvertToBasic(rpn);
 
             rtbBasic.Clear();
