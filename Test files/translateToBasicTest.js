@@ -1,1 +1,8 @@
-var a = 10, b = true, c = "some string";
+if (a + b < 0)
+{
+    a - b;
+}
+else
+{
+    a + b;
+}

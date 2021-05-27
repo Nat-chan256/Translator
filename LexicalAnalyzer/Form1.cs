@@ -279,22 +279,52 @@ namespace LexicalAnalyzer
                 }
                 rtbRPNBasicTranslationTab.Text += "\n";
             }
-
-            // Сохраняем ОПЗ в качестве поля класса
-            this.rpn = new List<string>();
-            foreach (List<string> line in rpn)
-            {
-                foreach (string word in line)
-                {
-                    this.rpn.Add(word);
-                }
-            }
         }
 
 
         //======================================Вкладка "Перевод в Basic"====================================
         private void btnExecuteBasicTranslationTab_Click(object sender, EventArgs e)
         {
+            // Считываем ОПЗ
+            string[] rpnText = rtbRPNBasicTranslationTab.Text.Split('\n');
+            List<List<string>> rpn = new List<List<string>>();
+            // "Склеиваем" строковые константы, если это необходимо
+            bool isString = false;
+            string currentStr = "";
+            for (int i = 0; i < rpnText.Length; ++i)
+            {
+                string[] line = rpnText[i].Split();
+                List<string> rpnLine = new List<string>();
+                for (int j = 0; j < line.Length; ++j)
+                {
+                    if (line[j].Contains("\"") || line[j].Contains("\'"))
+                    {
+                        isString = !isString;
+                        currentStr += line[j];
+                        // Если строка закончилась
+                        if (!isString)
+                        {
+                            // Добавляем её в список элементов ОПЗ
+                            rpnLine.Add(currentStr);
+                            currentStr = "";
+                        }
+                        else
+                        {
+                            currentStr += " ";
+                        }
+                    }
+                    else if (isString)
+                    {
+                        currentStr += line[j] + " ";
+                    }
+                    else
+                    {
+                        rpnLine.Add(line[j]);
+                    }
+                }
+                rpn.Add(rpnLine);
+            }
+
             List<List<string>> basicCode = rpnToBasicConverter.ConvertToBasic(rpn);
 
             rtbBasic.Clear();

@@ -16,6 +16,11 @@ namespace LexicalAnalyzer
             operators = new List<Operator>();
         }
 
+        public void Clear()
+        {
+            operators.Clear();
+        }
+
         // Возвращает верхний элемент стека без удаления этого элемента
         public Operator GetElememt()
         {

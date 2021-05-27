@@ -92,6 +92,7 @@
     <Compile Include="States\StringConstState.cs" />
     <Compile Include="States\TwoLiterOpState.cs" />
     <Compile Include="Operators\VariableDeclarationOperator.cs" />
+    <Compile Include="VariablesManager.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

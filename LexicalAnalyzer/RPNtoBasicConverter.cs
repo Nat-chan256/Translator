@@ -13,46 +13,68 @@ namespace LexicalAnalyzer
             constantsAndIdentifiersStack = new Stack<string>();
         }
 
-        public List<List<string>> ConvertToBasic(List<string> rpn)
+        public List<List<string>> ConvertToBasic(List<List<string>> _rpnByLines)
         {
-            List<List<string>> result = new List<List<string>>();
-            for (int i = 0; i < rpn.Count; ++i)
-            {
-                string element = rpn[i];
-                if (IsIdentifier(element) || IsConstant(element) || IsNumber(element))
-                {
-                    constantsAndIdentifiersStack.Push(element);
-                    continue;
-                }
+            VariablesManager.Reset();
+            List<string> rpn = new List<string>();
 
-                if (element == "НФ")
+            foreach (List<string> line in _rpnByLines)
+            {
+                foreach (string word in line)
                 {
-                    result = ProcessFunctionBeginning(result, rpn);
+                    rpn.Add(word);
                 }
-                else if (element == "КФ")
+            }
+
+            List<List<string>> result = new List<List<string>>();
+
+            // Индекс элемента в rpn
+            int i = -1;
+            for (int j = 0; j < _rpnByLines.Count; ++j)
+            {
+                for (int k = 0; k < _rpnByLines[j].Count; ++k)
                 {
-                    result = ProcessFunctionEnd(i, rpn, result);
+                    i++;
+                    string element = rpn[i];
+                    if (IsIdentifier(element) || IsConstant(element) || IsNumber(element))
+                    {
+                        constantsAndIdentifiersStack.Push(element);
+                        continue;
+                    }
+
+                    if (element == "НФ")
+                    {
+                        result = ProcessFunctionBeginning(result, rpn);
+                    }
+                    else if (element == "КФ")
+                    {
+                        result = ProcessFunctionEnd(i, rpn, result);
+                    }
+                    else if (element == "КО")
+                    {
+                        result = ProcessVariableDeclaration(i, rpn, result);
+                    }
+                    else if (element == "УПЛ")
+                    {
+                        result = ProcessIfStatement(j, k, _rpnByLines, result);
+                    }
+                    else if (element == "БП")
+                    {
+                        result = ProcessUnconditionalJump(i, rpn, result);
+                    }
+                    else if (IsBinaryOperator(element))
+                    {
+                        result = ProcessBinaryOperator(result, element);
+                    }
+                    else if (element[element.Length - 1] == ':')
+                    {
+                        result.Add(new List<string> { element });
+                    }
+                    else if (element == "=")
+                    {
+                        result = ProcessAssignmentOperator(result);
+                    }
                 }
-                else if (element == "КО")
-                {
-                    result = ProcessVariableDeclaration(i, rpn, result);
-                }
-                /*else if (element == "УПЛ")
-                {
-                    result = processIfStatement(result);
-                }
-                else if (element == "БП")
-                {
-                    result = processUnconditionalJump(result);
-                }
-                else if (IsBinaryOperation(element))
-                {
-                    result = processBinaryOperation(result, element);
-                }
-                else if (element == "=")
-                {
-                    result = processAssignmentOperator(result);
-                }*/
             }
 
             return result;
@@ -86,7 +108,7 @@ namespace LexicalAnalyzer
         {
             return _element == "+" || _element == "-" || _element == "*" || _element == "/" || _element == "**" || _element == "%"
                    || _element == "&&" || _element == "||" || _element == "<" || _element == "<=" || _element == ">=" || _element == ">"
-                   || _element == "==" || _element == "!=" || _element == "+=" || _element == "-=" || _element == "*=" || _element == "/="; 
+                   || _element == "==" || _element == "!=" || _element == "+=" || _element == "-=" || _element == "*=" || _element == "/=";
         }
 
         private bool IsConstant(string _element)
@@ -153,6 +175,35 @@ namespace LexicalAnalyzer
             return true;
         }
 
+        private List<List<string>> ProcessAssignmentOperator(List<List<string>> _currentCode)
+        {
+            string operand2 = constantsAndIdentifiersStack.Pop();
+            string operand1 = constantsAndIdentifiersStack.Pop();
+            _currentCode.Add(new List<string> { operand1, "=", operand2 });
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessBinaryOperator(List<List<string>> _currentCode, string _operator)
+        {
+            List<string> newLine = new List<string>();
+            string operand2 = constantsAndIdentifiersStack.Pop();
+            string operand1 = constantsAndIdentifiersStack.Pop();
+            newLine.Add("Dim");
+            string newVariableName = VariablesManager.GetNewVariable();
+            newLine.Add(newVariableName);
+            newLine.Add("As");
+            newLine.Add("Variant");
+
+            List<string> newLine2 = new List<string> { newVariableName, "=", operand1, _operator, operand2 };
+
+            _currentCode.Add(newLine);
+            _currentCode.Add(newLine2);
+
+            constantsAndIdentifiersStack.Push(newVariableName);
+
+            return _currentCode;
+        }
+
         // Обработка начала описания функции
         // _currentCode - текущий результат перевода в Basic
         private List<List<string>> ProcessFunctionBeginning(List<List<string>> _currentCode, List<string> _rpn)
@@ -207,7 +258,7 @@ namespace LexicalAnalyzer
         private List<List<string>> ProcessFunctionEnd(int _functionEndIndex, List<string> _rpn, List<List<string>> _currentCode)
         {
             string functionName = FindFunctionName(_functionEndIndex, _rpn);
-            List<string> newLine = new List<string> { "End"};
+            List<string> newLine = new List<string> { "End" };
             if (IsPrcedure(functionName, _rpn))
             {
                 newLine.Add("Sub");
@@ -218,6 +269,26 @@ namespace LexicalAnalyzer
             }
 
             _currentCode.Add(newLine);
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessIfStatement(int _lineIndex, int _uplIndex, List<List<string>> _rpn, List<List<string>> _currentCode)
+        {
+            List<string> newLine = new List<string> { "If", "Not", "(", constantsAndIdentifiersStack.Pop() };
+            newLine.Add(")");
+            newLine.Add("Then");
+
+            List<string> lineWithGoTo = new List<string> { "\t", "GoTo", _rpn[_lineIndex][_uplIndex - 1] };
+
+            _currentCode.Add(newLine);
+            _currentCode.Add(lineWithGoTo);
+
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessUnconditionalJump(int _bpIndex, List<string> _rpn, List<List<string>> _currentCode)
+        {
+            _currentCode.Add(new List<string> { "GoTo", _rpn[_bpIndex - 1] });
             return _currentCode;
         }
 
@@ -237,7 +308,7 @@ namespace LexicalAnalyzer
             Expression currentExpression = new Expression();
             for (int i = _declarationEndIndex - 4; i >= 0 && variables.Count < operandsCounter; --i)
             {
-                if (IsIdentifier(_rpn[i]))
+                if (IsIdentifier(_rpn[i]) || IsConstant(_rpn[i]) || _rpn[i] == "true" || _rpn[i] == "false")
                 {
                     if (counter < 0)
                     {
@@ -254,16 +325,19 @@ namespace LexicalAnalyzer
                         }
                     }
                 }
-                else if (_rpn[i] == "=" || IsBinaryOperator(_rpn[i]))
+                else if (_rpn[i] == "=")
                 {
                     counter--;
                     isEspressionPart = true;
+                }
+                else if (IsBinaryOperator(_rpn[i]))
+                {
+                    counter -= 2;
                 }
 
                 if (isEspressionPart && _rpn[i] != "=")
                 {
                     currentExpression.AddPart(_rpn[i]);
-                    counter++;
                 }
             }
 

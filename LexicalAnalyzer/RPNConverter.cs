@@ -48,6 +48,7 @@ namespace LexicalAnalyzer
             currentNestingLevel = 1;
             FunctionOperator.Reset();
             LabelsManager.Reset();
+            operatorsStack.Clear();
 
             List<List<string>> result = new List<List<string>>();
 
@@ -501,7 +502,9 @@ namespace LexicalAnalyzer
         // Проверяет, является ли лексема с указанным кодом операндом 
         private bool IsOperand(string _lexemeCode)
         {
-            if (_lexemeCode[0] == 'I' || _lexemeCode[0] == 'N' || _lexemeCode[0] == 'C')
+            if (_lexemeCode[0] == 'I' || _lexemeCode[0] == 'N' || _lexemeCode[0] == 'C' 
+                || ServiceTablesContainer.GetInstance().GetLexemeByCode(_lexemeCode) == "true"
+                || ServiceTablesContainer.GetInstance().GetLexemeByCode(_lexemeCode) == "false")
             {
                 return true;
             }
