@@ -8,9 +8,12 @@ namespace LexicalAnalyzer
     {
         private Stack<string> constantsAndIdentifiersStack;
 
+        private Dictionary<string, List<string>> temporaryVariables;
+
         public RPNtoBasicConverter()
         {
             constantsAndIdentifiersStack = new Stack<string>();
+            temporaryVariables = new Dictionary<string, List<string>>();
         }
 
         public List<List<string>> ConvertToBasic(List<List<string>> _rpnByLines)
@@ -77,6 +80,9 @@ namespace LexicalAnalyzer
                 }
             }
 
+            result = ReplaceTemporaryVariablesWithTheirValues(result);
+            //result = MoveVariablesDeclarationToTheBeggining(result);
+            
             return result;
         }
 
@@ -173,6 +179,28 @@ namespace LexicalAnalyzer
                 }
             }
             return true;
+        }
+
+        // Перемещает операторы объявления переменных (за исключением тех, что внутри функций) в начало программы
+        private List<List<string>> MoveVariablesDeclarationToTheBeggining(List<List<string>> _code)
+        {
+            List<List<string>> result = new List<List<string>>();
+            List<List<string>> variablesDeclarationLines = new List<List<string>>();
+            foreach (List<string> line in _code)
+            {
+                if (line.Count > 0 && line[0] == "Dim")
+                {
+                    variablesDeclarationLines.Add(line);
+                }
+                else
+                {
+                    result.Add(line);
+                }
+            }
+
+            variablesDeclarationLines = UnionVariablesDeclarationLines(variablesDeclarationLines);
+            variablesDeclarationLines.AddRange(result);
+            return variablesDeclarationLines;
         }
 
         private List<List<string>> ProcessAssignmentOperator(List<List<string>> _currentCode)
@@ -367,6 +395,74 @@ namespace LexicalAnalyzer
             }
 
             return _currentCode;
+        }
+
+        private List<List<string>> ReplaceTemporaryVariablesWithTheirValues(List<List<string>> _code)
+        {
+            List<List<string>> result = new List<List<string>>();
+            List<string> currentLine = new List<string>();
+            foreach (List<string> line in _code)
+            {
+                foreach (string word in line)
+                {
+                    if (temporaryVariables.ContainsKey(word))
+                    {
+                        currentLine.AddRange(temporaryVariables[word]);
+                    }
+                    else
+                    {
+                        currentLine.Add(word);
+                    }
+                }
+                result.Add(currentLine);
+                currentLine = new List<string>();
+            }
+            return result;
+        }
+
+        private List<List<string>> UnionVariablesDeclarationLines(List<List<string>> _variablesDeclarationLines)
+        {
+            // Собираем переменные
+            List<string> variables = new List<string>();
+            foreach (List<string> line in _variablesDeclarationLines)
+            {
+                foreach (string word in line)
+                {
+                    if (word != "Dim" && word != "As" && word != "," && word != "Variant")
+                    {
+                        variables.Add(word);
+                    }
+                }
+            }
+
+            List<List<string>> result = new List<List<string>>();
+            List<string> currentLine = new List<string> { "Dim" };
+            for (int i = 0; i < variables.Count; ++i)
+            {
+                currentLine.Add(variables[i]);
+                if (i < variables.Count - 1)
+                {
+                    currentLine.Add(",");
+                }
+                // Переход на новую строку
+                if ((i + 1) % 10 == 0)
+                {
+                    result.Add(currentLine);
+                    currentLine = new List<string>();
+                }
+            }
+            if (currentLine.Count > 0)
+            {
+                currentLine.Add("As");
+                currentLine.Add("Variant");
+                result.Add(currentLine);
+            }
+            else
+            {
+                result[result.Count - 1].Add("As");
+                result[result.Count - 1].Add("Variant");
+            }
+            return result;
         }
     }
 }

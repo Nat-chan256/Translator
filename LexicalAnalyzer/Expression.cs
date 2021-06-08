@@ -53,7 +53,7 @@ namespace LexicalAnalyzer
 
         public new string ToString()
         {
-            if (!IsInInterfixForm())
+            if (componentsList.Count != 0 && !IsInInterfixForm())
             {
                 ConvertToInterfixForm();
             }
