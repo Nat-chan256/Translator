@@ -363,7 +363,8 @@ namespace LexicalAnalyzer
                     else if (lexeme == ";")
                     {
                         // Обработка пустой части цикла for
-                        if (operatorsStack.GetElememt() is CycleOperator && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "for")
+                        if (operatorsStack.GetElememt() is CycleOperator 
+                            && ((CycleOperator)operatorsStack.GetElememt()).GetInnerRepresentation() == "for")
                         {
                             resultLine.Add("ПЧЦ");
                             ((OperatorWithCounter)operatorsStack.GetElememt()).IncreaseCounter();
@@ -387,13 +388,13 @@ namespace LexicalAnalyzer
                         {
                             // Извлекаем КО оператор
                             resultLine.Add(((VariableDeclarationOperator)operatorsStack.Pop()).GetLexeme());
-                            continue;
+                            //continue;
                         }
                         if (!operatorsStack.IsEmpty() && operatorsStack.GetElememt() is CycleOperator)
                         {
                             ((CycleOperator)operatorsStack.GetElememt()).IncreaseCounter();
                         }
-                        if (operatorsStack.GetElememt().GetLexeme() == "return")
+                        if (!operatorsStack.IsEmpty() && operatorsStack.GetElememt().GetLexeme() == "return")
                         {
                             resultLine.Add(operatorsStack.Pop().GetLexeme());
                         }

@@ -1,17 +1,20 @@
 ﻿using _1lab;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 
 namespace LexicalAnalyzer
 {
     class RPNtoBasicConverter
     {
+        // Очередь операторов присваивания, которые надо вставить после текущего оператора описания переменных
+        private List<List<string>> assignmentsQueue;
+
         private Stack<string> constantsAndIdentifiersStack;
 
         private Dictionary<string, List<string>> temporaryVariables;
 
         public RPNtoBasicConverter()
         {
+            assignmentsQueue = new List<List<string>>();
             constantsAndIdentifiersStack = new Stack<string>();
             temporaryVariables = new Dictionary<string, List<string>>();
         }
@@ -55,7 +58,7 @@ namespace LexicalAnalyzer
                     }
                     else if (element == "КО")
                     {
-                        result = ProcessVariableDeclaration(i, rpn, result);
+                        result = ProcessVariableDeclaration(j, _rpnByLines, result);
                     }
                     else if (element == "УПЛ")
                     {
@@ -65,9 +68,17 @@ namespace LexicalAnalyzer
                     {
                         result = ProcessUnconditionalJump(i, rpn, result);
                     }
+                    else if (element == "НЦ")
+                    {
+                        result = ProcessCycleOperator(result);
+                    }
                     else if (IsBinaryOperator(element))
                     {
                         result = ProcessBinaryOperator(result, element);
+                    }
+                    else if (element == "return")
+                    {
+                        result = ProccessReturnOperator(i, rpn, result);
                     }
                     else if (element[element.Length - 1] == ':')
                     {
@@ -75,14 +86,19 @@ namespace LexicalAnalyzer
                     }
                     else if (element == "=")
                     {
-                        result = ProcessAssignmentOperator(result);
+                        result = ProcessAssignmentOperator(j, _rpnByLines, result);
+                    }
+                    else if (element == "[]")
+                    {
+                        result = ProcessAnonymousArrayOperator(j, _rpnByLines, result);
+                        k++;
+                        i++;
                     }
                 }
             }
 
             result = ReplaceTemporaryVariablesWithTheirValues(result);
-            //result = MoveVariablesDeclarationToTheBeggining(result);
-            
+
             return result;
         }
 
@@ -181,55 +197,88 @@ namespace LexicalAnalyzer
             return true;
         }
 
-        // Перемещает операторы объявления переменных (за исключением тех, что внутри функций) в начало программы
-        private List<List<string>> MoveVariablesDeclarationToTheBeggining(List<List<string>> _code)
+        private List<List<string>> ProcessAnonymousArrayOperator(int _lineIndex, List<List<string>> _rpnByLines, List<List<string>> _currentCode)
         {
-            List<List<string>> result = new List<List<string>>();
-            List<List<string>> variablesDeclarationLines = new List<List<string>>();
-            foreach (List<string> line in _code)
+            if (_rpnByLines[_lineIndex].Contains("КО"))
             {
-                if (line.Count > 0 && line[0] == "Dim")
+                int arrayElemsNumber = int.Parse(constantsAndIdentifiersStack.Pop());
+                List<string> arrayElems = new List<string>();
+
+                // Извлекаем элементы массива
+                for (int i = 0; i < arrayElemsNumber; ++i)
                 {
-                    variablesDeclarationLines.Add(line);
+                    arrayElems.Add(constantsAndIdentifiersStack.Pop());
                 }
-                else
+                arrayElems.Reverse();
+                // Добавляем элементы массива в очередь присваиваний
+                string arrayName = constantsAndIdentifiersStack.Pop();
+                for (int i = 0; i < arrayElems.Count; ++i)
                 {
-                    result.Add(line);
+                    assignmentsQueue.Add(new List<string> { arrayName + "(" + i + ")", "=", arrayElems[i] });
                 }
+
+                // Добавляем в стек имя массива, но уже с указанием его размера
+                constantsAndIdentifiersStack.Push(arrayName + "(" + (arrayElemsNumber-1) + ")");
             }
 
-            variablesDeclarationLines = UnionVariablesDeclarationLines(variablesDeclarationLines);
-            variablesDeclarationLines.AddRange(result);
-            return variablesDeclarationLines;
+            return _currentCode;
         }
 
-        private List<List<string>> ProcessAssignmentOperator(List<List<string>> _currentCode)
+        private List<List<string>> ProcessAssignmentOperator(int _lineNumber, List<List<string>> _rpnByLines, List<List<string>> _currentCode)
         {
             string operand2 = constantsAndIdentifiersStack.Pop();
             string operand1 = constantsAndIdentifiersStack.Pop();
-            _currentCode.Add(new List<string> { operand1, "=", operand2 });
+
+            // Контейнер, в который будем добавлять оператор присваивания
+            // Может быть текущим кодом либо очередью присваиваний
+            List<List<string>> container = (_rpnByLines[_lineNumber].Contains("КО")) ? assignmentsQueue : _currentCode;
+
+            if (!temporaryVariables.ContainsKey(operand2)) // Если второй операнд - не временная переменная
+            {
+                container.Add(new List<string> { operand1, "=", operand2 });
+            }
+            else
+            {
+                string operand2FullExpression = "";
+                foreach (string expressionPart in temporaryVariables[operand2])
+                {
+                    operand2FullExpression += " " + expressionPart;
+                }
+                container.Add(new List<string> { operand1, "=", operand2FullExpression });
+            }
+
+            if (_rpnByLines[_lineNumber].Contains("КО"))
+            {
+                constantsAndIdentifiersStack.Push(operand1);
+            }
+
             return _currentCode;
         }
 
         private List<List<string>> ProcessBinaryOperator(List<List<string>> _currentCode, string _operator)
         {
-            List<string> newLine = new List<string>();
             string operand2 = constantsAndIdentifiersStack.Pop();
             string operand1 = constantsAndIdentifiersStack.Pop();
-            newLine.Add("Dim");
             string newVariableName = VariablesManager.GetNewVariable();
-            newLine.Add(newVariableName);
-            newLine.Add("As");
-            newLine.Add("Variant");
 
-            List<string> newLine2 = new List<string> { newVariableName, "=", operand1, _operator, operand2 };
-
-            _currentCode.Add(newLine);
-            _currentCode.Add(newLine2);
+            temporaryVariables.Add(newVariableName, new List<string> { operand1, _operator, operand2 });
 
             constantsAndIdentifiersStack.Push(newVariableName);
 
             return _currentCode;
+        }
+
+        private List<List<string>> ProcessCycleOperator(List<List<string>> _currentCode)
+        {
+            int operandsCount = int.Parse(constantsAndIdentifiersStack.Pop());
+            if (operandsCount == 3)
+            {
+                string increment = constantsAndIdentifiersStack.Pop();
+                string condition = constantsAndIdentifiersStack.Pop();
+                string initialization = constantsAndIdentifiersStack.Pop();
+                // Обработка цикла for
+                if ()
+            }
         }
 
         // Обработка начала описания функции
@@ -314,59 +363,43 @@ namespace LexicalAnalyzer
             return _currentCode;
         }
 
+        private List<List<string>> ProccessReturnOperator(int _elemIndexInRPN, List<string> _rpn, List<List<string>> _currentCode)
+        {
+            string valueToReturn = constantsAndIdentifiersStack.Pop();
+            if (temporaryVariables.ContainsKey(valueToReturn))
+            {
+                string temp = "";
+                foreach (string expressionPart in temporaryVariables[valueToReturn])
+                {
+                    temp += expressionPart + " ";
+                }
+                valueToReturn = temp;
+            }
+
+            string functionName = FindFunctionName(_elemIndexInRPN, _rpn);
+
+            _currentCode.Add(new List<string> { functionName, "=", valueToReturn });
+            return _currentCode;
+        }
+
         private List<List<string>> ProcessUnconditionalJump(int _bpIndex, List<string> _rpn, List<List<string>> _currentCode)
         {
             _currentCode.Add(new List<string> { "GoTo", _rpn[_bpIndex - 1] });
             return _currentCode;
         }
 
-        private List<List<string>> ProcessVariableDeclaration(int _declarationEndIndex, List<string> _rpn, List<List<string>> _currentCode)
-        { 
+        private List<List<string>> ProcessVariableDeclaration(int _lineIndex, List<List<string>> _rpnByLines, List<List<string>> _currentCode)
+        {
             int level = int.Parse(constantsAndIdentifiersStack.Pop());
             int functionNumber = int.Parse(constantsAndIdentifiersStack.Pop());
             int operandsCounter = int.Parse(constantsAndIdentifiersStack.Pop());
 
             List<string> lineWithVarDeclaration = new List<string> { "Dim" };
-            // Вспомогательная переменная для того, чтобы отличать объявленные переменные 
-            // от операндов выражений
-            int counter = 0;
             List<string> variables = new List<string>();
-            OrderedDictionary variablesToSet = new OrderedDictionary();
-            bool isEspressionPart = false;
-            Expression currentExpression = new Expression();
-            for (int i = _declarationEndIndex - 4; i >= 0 && variables.Count < operandsCounter; --i)
-            {
-                if (IsIdentifier(_rpn[i]) || IsConstant(_rpn[i]) || _rpn[i] == "true" || _rpn[i] == "false")
-                {
-                    if (counter < 0)
-                    {
-                        counter++;
-                    }
-                    if (counter == 0)
-                    {
-                        variables.Add(_rpn[i]);
-                        if (isEspressionPart)
-                        {
-                            isEspressionPart = false;
-                            variablesToSet.Add(_rpn[i], currentExpression);
-                            currentExpression = new Expression();
-                        }
-                    }
-                }
-                else if (_rpn[i] == "=")
-                {
-                    counter--;
-                    isEspressionPart = true;
-                }
-                else if (IsBinaryOperator(_rpn[i]))
-                {
-                    counter -= 2;
-                }
 
-                if (isEspressionPart && _rpn[i] != "=")
-                {
-                    currentExpression.AddPart(_rpn[i]);
-                }
+            for (int i = 0; i < operandsCounter; ++i)
+            {
+                variables.Add(constantsAndIdentifiersStack.Pop());
             }
 
             // Добавляем объявление переменных
@@ -384,14 +417,23 @@ namespace LexicalAnalyzer
             _currentCode.Add(lineWithVarDeclaration);
 
             // Добавляем инициализацию переменных
-            string[] keys = new string[variablesToSet.Count];
-            Expression[] values = new Expression[variablesToSet.Count];
-            variablesToSet.Keys.CopyTo(keys, 0);
-            variablesToSet.Values.CopyTo(values, 0);
-
-            for(int i = variablesToSet.Count-1; i >= 0; --i)
+            if (!_rpnByLines[_lineIndex].Contains("НЦ"))
             {
-                _currentCode.Add(new List<string> { keys[i], "=", values[i].ToString() });
+                while (assignmentsQueue.Count > 0)
+                {
+                    _currentCode.Add(assignmentsQueue[0]);
+                    assignmentsQueue.RemoveAt(0);
+                }
+            }
+            else
+            {
+                while (assignmentsQueue.Count > 0)
+                {
+                    string newVar = VariablesManager.GetNewVariable();
+                    temporaryVariables.Add(newVar, assignmentsQueue[0]);
+                    constantsAndIdentifiersStack.Push(newVar);
+                    assignmentsQueue.RemoveAt(0);
+                }
             }
 
             return _currentCode;
@@ -420,49 +462,5 @@ namespace LexicalAnalyzer
             return result;
         }
 
-        private List<List<string>> UnionVariablesDeclarationLines(List<List<string>> _variablesDeclarationLines)
-        {
-            // Собираем переменные
-            List<string> variables = new List<string>();
-            foreach (List<string> line in _variablesDeclarationLines)
-            {
-                foreach (string word in line)
-                {
-                    if (word != "Dim" && word != "As" && word != "," && word != "Variant")
-                    {
-                        variables.Add(word);
-                    }
-                }
-            }
-
-            List<List<string>> result = new List<List<string>>();
-            List<string> currentLine = new List<string> { "Dim" };
-            for (int i = 0; i < variables.Count; ++i)
-            {
-                currentLine.Add(variables[i]);
-                if (i < variables.Count - 1)
-                {
-                    currentLine.Add(",");
-                }
-                // Переход на новую строку
-                if ((i + 1) % 10 == 0)
-                {
-                    result.Add(currentLine);
-                    currentLine = new List<string>();
-                }
-            }
-            if (currentLine.Count > 0)
-            {
-                currentLine.Add("As");
-                currentLine.Add("Variant");
-                result.Add(currentLine);
-            }
-            else
-            {
-                result[result.Count - 1].Add("As");
-                result[result.Count - 1].Add("Variant");
-            }
-            return result;
-        }
     }
 }
