@@ -19,9 +19,30 @@ namespace LexicalAnalyzer
             temporaryVariables = new Dictionary<string, List<string>>();
         }
 
-        public List<List<string>> ConvertToBasic(List<List<string>> _rpnByLines)
+        private List<string> ConvertToBasic(List<string> _rpnLine)
         {
-            VariablesManager.Reset();
+            RPNtoBasicConverter littleConverter = new RPNtoBasicConverter();
+            List<List<string>> multipleLinesResult = littleConverter
+                .ConvertToBasic(new List<List<string>> { _rpnLine }, false);
+
+            List<string> result = new List<string>();
+            foreach (List<string> line in multipleLinesResult)
+            {
+                foreach (string word in line)
+                {
+                    result.Add(word);
+                }
+            }
+
+            return result;
+        }
+
+        public List<List<string>> ConvertToBasic(List<List<string>> _rpnByLines, bool _resetTempVars = true)
+        {
+            if (_resetTempVars)
+            {
+                VariablesManager.Reset();
+            }
             List<string> rpn = new List<string>();
 
             foreach (List<string> line in _rpnByLines)
@@ -38,10 +59,20 @@ namespace LexicalAnalyzer
             int i = -1;
             for (int j = 0; j < _rpnByLines.Count; ++j)
             {
+                if (j == 26)
+                {
+                    string l = "Debug";
+                }
                 for (int k = 0; k < _rpnByLines[j].Count; ++k)
                 {
                     i++;
                     string element = rpn[i];
+
+                    if (element.Length == 0)
+                    {
+                        continue;
+                    }
+
                     if (IsIdentifier(element) || IsConstant(element) || IsNumber(element))
                     {
                         constantsAndIdentifiersStack.Push(element);
@@ -70,19 +101,36 @@ namespace LexicalAnalyzer
                     }
                     else if (element == "НЦ")
                     {
-                        result = ProcessCycleOperator(result);
+                        result = ProcessCycleOperator(j, _rpnByLines, result);
+                    }
+                    else if (element == "КЦ")
+                    {
+                        result = ProcessCycleEnd(result);
+                    }
+                    else if (element == "АЭМ")
+                    {
+                        result = ProcessArrayOperator(result);
                     }
                     else if (IsBinaryOperator(element))
                     {
                         result = ProcessBinaryOperator(result, element);
                     }
+                    else if (IsUnaryOperator(element))
+                    {
+                        result = ProcessUnaryOperator(element, result);
+                    }
                     else if (element == "return")
                     {
                         result = ProccessReturnOperator(i, rpn, result);
                     }
+                    // Обработка метки
                     else if (element[element.Length - 1] == ':')
                     {
-                        result.Add(new List<string> { element });
+                        // Заносим метку в результат только в том случае, когда она не является частью цикла
+                        if (k > 0 && _rpnByLines[j][k - 1] != "НЦ" || k == 0)
+                        {
+                            result.Add(new List<string> { element });
+                        }
                     }
                     else if (element == "=")
                     {
@@ -97,10 +145,137 @@ namespace LexicalAnalyzer
                 }
             }
 
+            while (constantsAndIdentifiersStack.Count > 0)
+            {
+                string token = constantsAndIdentifiersStack.Pop();
+                if (token.Length > 0)
+                {
+                    string line = ReplaceTempVarWithItsValue(token);
+                    result.Add(new List<string> { line });
+                }
+            }
+
             result = ReplaceTemporaryVariablesWithTheirValues(result);
 
             return result;
         }
+
+        // Извлечение условия из цикла do...while
+        private List<string> ExtractCondition(int _lineIndex, List<List<string>> _rpnByLines)
+        {
+            List<List<string>> cycleBody = ExtractCycleBody(_lineIndex, _rpnByLines);
+            int lineWithConditionIndex = _lineIndex + cycleBody.Count + 1;
+            List<string> condition = new List<string>();
+            foreach (string lexeme in _rpnByLines[lineWithConditionIndex])
+            {
+                if (lexeme == "УПИ")
+                {
+                    break;
+                }
+                condition.Add(lexeme);
+            }
+            return ConvertToBasic(condition);
+        }
+
+        // Нахождение тела цикла по индексу строки, в которой лежит лексема НЦ 
+        private List<List<string>> ExtractCycleBody(int _lineIndex, List<List<string>> _rpnByLines)
+        {
+            List<List<string>> cycleBodyRpn = new List<List<string>>();
+            int nestingLevel = 0;
+            for (int i = _lineIndex + 1; i < _rpnByLines.Count; ++i)
+            {
+                if (!_rpnByLines[i].Contains("КЦ"))
+                {
+                    cycleBodyRpn.Add(_rpnByLines[i]);
+                }
+                else if (_rpnByLines[i].Contains("КЦ"))
+                {
+                    if (nestingLevel == 0)
+                    {
+                        return ConvertToBasic(cycleBodyRpn, false);
+                    }
+                    else
+                    {
+                        nestingLevel--;
+                    }
+
+                }
+                if (_rpnByLines[i].Contains("НЦ"))
+                {
+                    nestingLevel++;
+                }
+            }
+            return ConvertToBasic(cycleBodyRpn, false);
+        }
+
+        private string ExtractRightOperandInCondition(string _line)
+        {
+            string[] tokens = _line.Split();
+            for (int i = 0; i < tokens.Length; ++i)
+            {
+                if ((new List<string> { "==", "<=", "<", ">=", ">", "!=" }).Contains(tokens[i]))
+                {
+                    return tokens[i + 1];
+                }
+            }
+            return null;
+        }
+
+        // Извлечение шага из строк вида "i += 2" (в данном примере - 2)
+        private string ExtractStep(string _line)
+        {
+            string[] tokens = _line.Trim(' ').Split();
+            for (int i = 0; i < tokens.Length; ++i)
+            {
+                if ((new List<string> { "+=", "-=", "+", "-" }).Contains(tokens[i]))
+                {
+                    if ((tokens[i] == "+" || tokens[i] == "-") && tokens[i + 1] == tokens[0])
+                    {
+                        return tokens[i - 1];
+                    }
+                    else
+                    {
+                        return tokens[i + 1];
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Извлечение имени переменной из строки вида "i = 0"
+        private string ExtractVarFromInitialization(string _line)
+        {
+            return _line.Trim().Split()[0];
+        }
+
+        private string FindCurrentCycleIterator(List<List<string>> _code)
+        {
+            int nestingLevel = 0;
+            for (int i = _code.Count - 1; i >= 0; --i)
+            {
+                for (int j = _code[i].Count - 1; j >= 0; --j)
+                {
+                    if (_code[i][j] == "Next")
+                    {
+                        nestingLevel++;
+                    }
+
+                    if (_code[i][j] == "For")
+                    {
+                        if (nestingLevel == 0)
+                        {
+                            return ExtractVarFromInitialization(_code[i][j + 1]);
+                        }
+                        else
+                        {
+                            nestingLevel--;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
 
         // Нахождение имени функции по индексу её конца
         private string FindFunctionName(int _functionEndPosition, List<string> _rpn)
@@ -142,6 +317,34 @@ namespace LexicalAnalyzer
         private bool IsIdentifier(string _element)
         {
             return ServiceTablesContainer.GetInstance().GetIdentifiersTable().ContainsKey(_element);
+        }
+
+        private bool IsInsideWhileCycle(List<List<string>> _code)
+        {
+            int nestingLevel = 0;
+            for (int i = _code.Count - 1; i >= 0; --i)
+            {
+                for (int j = _code[i].Count - 1; j >= 0; --j)
+                {
+                    if (_code[i][j] == "Loop" || _code[i][j] == "Next")
+                    {
+                        nestingLevel++;
+                    }
+
+                    if (_code[i][j] == "While" || _code[i][j] == "For")
+                    {
+                        if (nestingLevel == 0)
+                        {
+                            return _code[i][j] == "While";
+                        }
+                        else
+                        {
+                            nestingLevel--;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         private bool IsNumber(string _element)
@@ -197,6 +400,11 @@ namespace LexicalAnalyzer
             return true;
         }
 
+        private bool IsUnaryOperator(string _element)
+        {
+            return (new List<string> { "++", "--" }).Contains(_element);
+        }
+
         private List<List<string>> ProcessAnonymousArrayOperator(int _lineIndex, List<List<string>> _rpnByLines, List<List<string>> _currentCode)
         {
             if (_rpnByLines[_lineIndex].Contains("КО"))
@@ -221,6 +429,32 @@ namespace LexicalAnalyzer
                 constantsAndIdentifiersStack.Push(arrayName + "(" + (arrayElemsNumber-1) + ")");
             }
 
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessArrayOperator(List<List<string>> _currentCode)
+        {
+            int operndsCount = int.Parse(constantsAndIdentifiersStack.Pop());
+            List<string> indeces = new List<string>();
+            for (int i = 0; i < operndsCount - 1; ++i)
+            {
+                indeces.Add(constantsAndIdentifiersStack.Pop());
+            }
+            indeces.Reverse();
+            string arrayName = constantsAndIdentifiersStack.Pop() + "(";
+            for (int i = 0; i < indeces.Count; ++i)
+            {
+                arrayName += ReplaceTempVarWithItsValue(indeces[i]);
+                if (i < indeces.Count - 1)
+                {
+                    arrayName += ",";
+                }
+                else
+                {
+                    arrayName += ")";
+                }
+            }
+            constantsAndIdentifiersStack.Push(arrayName);
             return _currentCode;
         }
 
@@ -259,26 +493,89 @@ namespace LexicalAnalyzer
         {
             string operand2 = constantsAndIdentifiersStack.Pop();
             string operand1 = constantsAndIdentifiersStack.Pop();
-            string newVariableName = VariablesManager.GetNewVariable();
+           
+            if (_operator.Length == 2 && _operator[0] != '=' && _operator[1] == '=') // Операторы вида "+="
+            {
+                // Переделываем выражения вида "i += 1" в "i = i + 1" 
+                _currentCode.Add(new List<string> { operand1, "=", operand1, _operator[0].ToString(), operand2 });
+            }
+            else 
+            {
+                string newVariableName = VariablesManager.GetNewVariable();
 
-            temporaryVariables.Add(newVariableName, new List<string> { operand1, _operator, operand2 });
+                temporaryVariables.Add(newVariableName, new List<string> { operand1, _operator, operand2 });
 
-            constantsAndIdentifiersStack.Push(newVariableName);
+                constantsAndIdentifiersStack.Push(newVariableName);
+            }
 
             return _currentCode;
         }
 
-        private List<List<string>> ProcessCycleOperator(List<List<string>> _currentCode)
+        private List<List<string>> ProcessCycleEnd(List<List<string>> _currentCode)
+        {
+            if (IsInsideWhileCycle(_currentCode))
+            {
+                _currentCode.Add(new List<string> { "Loop" });
+            }
+            else
+            {
+                string iteratorName = FindCurrentCycleIterator(_currentCode);
+                _currentCode.Add(new List<string> { "Next", iteratorName });
+            }
+            
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessCycleOperator(int _lineIndex, List<List<string>> _rpnByLines, 
+            List<List<string>> _currentCode)
         {
             int operandsCount = int.Parse(constantsAndIdentifiersStack.Pop());
+            List<string> lineWithCycle = new List<string>();
+            // Обработка цикла for
             if (operandsCount == 3)
             {
-                string increment = constantsAndIdentifiersStack.Pop();
-                string condition = constantsAndIdentifiersStack.Pop();
-                string initialization = constantsAndIdentifiersStack.Pop();
+                string increment = ReplaceTempVarWithItsValue(constantsAndIdentifiersStack.Pop());
+                string condition = ReplaceTempVarWithItsValue(constantsAndIdentifiersStack.Pop());
+                string initialization = ReplaceTempVarWithItsValue(constantsAndIdentifiersStack.Pop());
                 // Обработка цикла for
-                if ()
+                if ((condition.Contains("<") || condition.Contains(">")) && assignmentsQueue.Count <= 1)
+                {
+                    lineWithCycle.Add("For");
+                    lineWithCycle.Add(initialization);
+                    lineWithCycle.Add("To");
+                    lineWithCycle.Add(ExtractRightOperandInCondition(condition));
+                    if (!increment.Contains("--") && !increment.Contains("++"))
+                    {
+                        lineWithCycle.Add("Step");
+                        lineWithCycle.Add(ExtractStep(increment));
+                    }
+                }
             }
+            // Обработка цикла while
+            else if (operandsCount == 1)
+            {
+                string condition = ReplaceTempVarWithItsValue(constantsAndIdentifiersStack.Pop());
+                lineWithCycle.Add("Do");
+                lineWithCycle.Add("While");
+                lineWithCycle.Add(condition);
+            }
+            // Обработка цикла do...while
+            else if (operandsCount == 0)
+            {
+                // Вставляем тело цикла до его начала, чтобы оно выполнилось хотя бы один раз
+                List<List<string>> cycleBody = ExtractCycleBody(_lineIndex, _rpnByLines);
+                _currentCode.AddRange(cycleBody);
+
+                // Добавляем первую строку цикла
+                List<string> condition = ExtractCondition(_lineIndex, _rpnByLines);
+                lineWithCycle.Add("Do");
+                lineWithCycle.Add("While");
+                lineWithCycle.AddRange(condition);
+            }
+
+            _currentCode.Add(lineWithCycle);
+
+            return _currentCode;
         }
 
         // Обработка начала описания функции
@@ -382,6 +679,15 @@ namespace LexicalAnalyzer
             return _currentCode;
         }
 
+        private List<List<string>> ProcessUnaryOperator(string _operator, List<List<string>> _currentCode)
+        {
+            string operand = constantsAndIdentifiersStack.Pop();
+            string tempVarName = VariablesManager.GetNewVariable();
+            temporaryVariables.Add(tempVarName, new List<string> { _operator, operand });
+            constantsAndIdentifiersStack.Push(tempVarName);
+            return _currentCode;
+        }
+
         private List<List<string>> ProcessUnconditionalJump(int _bpIndex, List<string> _rpn, List<List<string>> _currentCode)
         {
             _currentCode.Add(new List<string> { "GoTo", _rpn[_bpIndex - 1] });
@@ -447,19 +753,28 @@ namespace LexicalAnalyzer
             {
                 foreach (string word in line)
                 {
-                    if (temporaryVariables.ContainsKey(word))
-                    {
-                        currentLine.AddRange(temporaryVariables[word]);
-                    }
-                    else
-                    {
-                        currentLine.Add(word);
-                    }
+                    currentLine.Add(ReplaceTempVarWithItsValue(word));
                 }
                 result.Add(currentLine);
                 currentLine = new List<string>();
             }
             return result;
+        }
+
+        private string ReplaceTempVarWithItsValue(string _varName)
+        {
+            if (!temporaryVariables.ContainsKey(_varName))
+            {
+                return _varName;
+            }
+
+            List<string> valueList = temporaryVariables[_varName];
+            string value = "";
+            foreach (string valuePart in valueList)
+            {
+                value += ReplaceTempVarWithItsValue(valuePart) + " ";
+            }
+            return value;
         }
 
     }
