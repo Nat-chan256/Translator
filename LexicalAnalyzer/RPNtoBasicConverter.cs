@@ -1,4 +1,5 @@
-﻿using _1lab;
+﻿using System.Text.RegularExpressions;
+using _1lab;
 using System.Collections.Generic;
 
 namespace LexicalAnalyzer
@@ -10,14 +11,30 @@ namespace LexicalAnalyzer
 
         private Stack<string> constantsAndIdentifiersStack;
 
+        // Имена функций, использованных в программе
+        private HashSet<string> functionNames;
+
         private Dictionary<string, List<string>> temporaryVariables;
 
         public RPNtoBasicConverter()
         {
             assignmentsQueue = new List<List<string>>();
             constantsAndIdentifiersStack = new Stack<string>();
+            functionNames = new HashSet<string>();
             temporaryVariables = new Dictionary<string, List<string>>();
         }
+
+
+        // Вставка индекса впереди, например a(0) -> a(1,0)
+        private List<string> AddRowIndex(int _rowIndex, List<string> _assignmentWithArray)
+        {
+            string _array = _assignmentWithArray[0];
+            string[] arrayByParts = _array.Split('(');
+            _assignmentWithArray[0] = arrayByParts[0] + "(" + _rowIndex.ToString()
+                + "," + arrayByParts[1];
+            return _assignmentWithArray;
+        }
+
 
         private List<string> ConvertToBasic(List<string> _rpnLine)
         {
@@ -59,10 +76,6 @@ namespace LexicalAnalyzer
             int i = -1;
             for (int j = 0; j < _rpnByLines.Count; ++j)
             {
-                if (j == 26)
-                {
-                    string l = "Debug";
-                }
                 for (int k = 0; k < _rpnByLines[j].Count; ++k)
                 {
                     i++;
@@ -111,6 +124,15 @@ namespace LexicalAnalyzer
                     {
                         result = ProcessArrayOperator(result);
                     }
+                    else if (element == "Ф")
+                    {
+                        result = ProcessFunctionCall(result);
+                    }
+                    else if (element == "УПИ")
+                    {
+                        // Извлекаем условие цикла do...while из стека
+                        constantsAndIdentifiersStack.Pop();
+                    }
                     else if (IsBinaryOperator(element))
                     {
                         result = ProcessBinaryOperator(result, element);
@@ -139,8 +161,6 @@ namespace LexicalAnalyzer
                     else if (element == "[]")
                     {
                         result = ProcessAnonymousArrayOperator(j, _rpnByLines, result);
-                        k++;
-                        i++;
                     }
                 }
             }
@@ -158,6 +178,12 @@ namespace LexicalAnalyzer
             result = ReplaceTemporaryVariablesWithTheirValues(result);
 
             return result;
+        }
+
+        // Извлечение имени массива из записи вида "a(3)" (результат - а)
+        private string ExtractArrayName(string _arrayWithDimension)
+        {
+            return _arrayWithDimension.Trim().Split('(')[0];
         }
 
         // Извлечение условия из цикла do...while
@@ -206,6 +232,45 @@ namespace LexicalAnalyzer
                 }
             }
             return ConvertToBasic(cycleBodyRpn, false);
+        }
+
+        // Извлечение размера массива из записи вида a(10)
+        private int ExtractDimension(string _element)
+        {
+            string dimStr = "";
+            bool isDimension = false;
+            for (int i = 0; i < _element.Length; ++i)
+            {
+                if (_element[i] == '(')
+                {
+                    isDimension = true;
+                }
+                if (char.IsDigit(_element[i]) && isDimension)
+                {
+                    dimStr += _element[i];
+                }
+                if (_element[i] == ')')
+                {
+                    isDimension = false;
+                }
+            }
+            return int.Parse(dimStr);
+        }
+
+        // Извлекает размер массива вместе со скобками
+        private string ExtractDimensions(string _array)
+        {
+            string[] splittedArray = _array.Split('(');
+            string dimensions = "(";
+            for (int i = 1; i < splittedArray.Length; ++i)
+            {
+                dimensions += splittedArray[i];
+                if (i < splittedArray.Length - 1)
+                {
+                    dimensions += "(";
+                }
+            }
+            return dimensions;
         }
 
         private string ExtractRightOperandInCondition(string _line)
@@ -299,6 +364,15 @@ namespace LexicalAnalyzer
                 }
             }
             return "";
+        }
+
+        // Возвращает true для записей вида a(5)
+        private bool IsArray(string _element)
+        {
+            Regex regex = new Regex(@"\d+");
+            string name = ExtractArrayName(_element);
+            return _element.Contains("(") && regex.IsMatch(_element) 
+                && _element.Contains(")") && !functionNames.Contains(name);
         }
 
         private bool IsBinaryOperator(string _element)
@@ -407,28 +481,61 @@ namespace LexicalAnalyzer
 
         private List<List<string>> ProcessAnonymousArrayOperator(int _lineIndex, List<List<string>> _rpnByLines, List<List<string>> _currentCode)
         {
-            if (_rpnByLines[_lineIndex].Contains("КО"))
-            {
-                int arrayElemsNumber = int.Parse(constantsAndIdentifiersStack.Pop());
-                List<string> arrayElems = new List<string>();
+            int arrayElemsNumber = int.Parse(constantsAndIdentifiersStack.Pop());
+            List<string> arrayElems = new List<string>();
 
-                // Извлекаем элементы массива
-                for (int i = 0; i < arrayElemsNumber; ++i)
-                {
-                    arrayElems.Add(constantsAndIdentifiersStack.Pop());
-                }
-                arrayElems.Reverse();
-                // Добавляем элементы массива в очередь присваиваний
-                string arrayName = constantsAndIdentifiersStack.Pop();
+            // Извлекаем элементы массива
+            for (int i = 0; i < arrayElemsNumber; ++i)
+            {
+                arrayElems.Add(constantsAndIdentifiersStack.Pop());
+            }
+            arrayElems.Reverse();
+
+            string arrayNameWithoutBrackets = VariablesManager.GetNewVariable();
+            string arrayName = arrayNameWithoutBrackets;
+
+            // Проверяем, не является ли массив многомерным
+            if (IsArray(arrayElems[0]))
+            {
+                arrayName += "(";
                 for (int i = 0; i < arrayElems.Count; ++i)
                 {
-                    assignmentsQueue.Add(new List<string> { arrayName + "(" + i + ")", "=", arrayElems[i] });
+                    string dimension = ExtractDimension(arrayElems[i]).ToString();
+                    arrayName += dimension;
+                    if (i < arrayElems.Count - 1)
+                    {
+                        arrayName += ",";
+                    }
+                    else
+                    {
+                        arrayName += ")";
+                    }
                 }
 
-                // Добавляем в стек имя массива, но уже с указанием его размера
-                constantsAndIdentifiersStack.Push(arrayName + "(" + (arrayElemsNumber-1) + ")");
+                // Изменяем индексы элементов в очереди присваиваний
+                int assignmentIndex = 0;
+                for (int i = 0; i < arrayElems.Count; ++i)
+                {
+                    for (int j = 0; j <= ExtractDimension(arrayElems[i]); ++j)
+                    {
+                        assignmentsQueue[assignmentIndex] = AddRowIndex(i, assignmentsQueue[assignmentIndex]);
+                        assignmentsQueue[assignmentIndex] = ReplaceArrayName(arrayNameWithoutBrackets, assignmentsQueue[assignmentIndex]);
+                        assignmentIndex++;
+                    }
+                }
+                constantsAndIdentifiersStack.Push(arrayName);
+                return _currentCode;
             }
 
+            // Добавляем элементы массива в очередь присваиваний
+            for (int i = 0; i < arrayElems.Count; ++i)
+            {
+                assignmentsQueue.Add(new List<string> { arrayName + "(" + i + ")", "=", arrayElems[i] });
+            }
+
+            // Добавляем в стек имя массива, но уже с указанием его размера
+            constantsAndIdentifiersStack.Push(arrayName + "(" + (arrayElemsNumber-1) + ")");
+            
             return _currentCode;
         }
 
@@ -462,6 +569,19 @@ namespace LexicalAnalyzer
         {
             string operand2 = constantsAndIdentifiersStack.Pop();
             string operand1 = constantsAndIdentifiersStack.Pop();
+
+            // Отдельная обработка для массивов
+            if (IsArray(operand2))
+            {
+                string dimensions = ExtractDimensions(operand2);
+                temporaryVariables.Add(operand2, new List<string> { operand1 + dimensions });
+                string arrayName = ExtractArrayName(operand2);
+                temporaryVariables.Add(arrayName, new List<string> { operand1 });
+
+                constantsAndIdentifiersStack.Push(operand2);
+
+                return _currentCode;
+            }
 
             // Контейнер, в который будем добавлять оператор присваивания
             // Может быть текущим кодом либо очередью присваиваний
@@ -591,6 +711,7 @@ namespace LexicalAnalyzer
                 operands.Add(constantsAndIdentifiersStack.Pop());
             }
             string functionName = operands[operands.Count - 1];
+            functionNames.Add(functionName);
 
             List<string> functionSignature = new List<string>();
 
@@ -626,6 +747,35 @@ namespace LexicalAnalyzer
             }
 
             _currentCode.Add(functionSignature);
+            return _currentCode;
+        }
+
+        private List<List<string>> ProcessFunctionCall(List<List<string>> _currentCode)
+        {
+            int operandsCount = int.Parse(constantsAndIdentifiersStack.Pop());
+            List<string> functionCallOperands = new List<string>();
+            for (int i = 0; i < operandsCount; ++i)
+            {
+                functionCallOperands.Add(constantsAndIdentifiersStack.Pop());
+            }
+            functionCallOperands.Reverse();
+
+            string functionCall = functionCallOperands[0];
+            functionNames.Add(functionCall);
+            functionCall += "(";
+            for (int i = 1; i < operandsCount; ++i)
+            {
+                functionCall += functionCallOperands[i];
+                if (i < operandsCount - 1)
+                {
+                    functionCall += ",";
+                }
+                else
+                {
+                    functionCall += ")";
+                }
+            }
+            constantsAndIdentifiersStack.Push(functionCall);
             return _currentCode;
         }
 
@@ -745,12 +895,20 @@ namespace LexicalAnalyzer
             return _currentCode;
         }
 
+        private List<string> ReplaceArrayName(string _newArrayName, List<string> _assignment)
+        {
+            string[] assignmentParts = _assignment[0].Split('(');
+            _assignment[0] = _newArrayName + "(" + assignmentParts[1];
+            return _assignment;
+        }
+
         private List<List<string>> ReplaceTemporaryVariablesWithTheirValues(List<List<string>> _code)
         {
             List<List<string>> result = new List<List<string>>();
             List<string> currentLine = new List<string>();
-            foreach (List<string> line in _code)
+            for (int i = 0; i < _code.Count; ++i)
             {
+                List<string> line = _code[i];
                 foreach (string word in line)
                 {
                     currentLine.Add(ReplaceTempVarWithItsValue(word));
@@ -763,6 +921,14 @@ namespace LexicalAnalyzer
 
         private string ReplaceTempVarWithItsValue(string _varName)
         {
+            // Обработка массивов и их элементов
+            if (IsArray(_varName))
+            {
+                string arrName = ExtractArrayName(_varName);
+                string dimensions = ExtractDimensions(_varName);
+                return ReplaceTempVarWithItsValue(arrName) + dimensions;
+            }
+
             if (!temporaryVariables.ContainsKey(_varName))
             {
                 return _varName;
