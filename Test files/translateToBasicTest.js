@@ -1,6 +1,6 @@
 function proc(c, d)
 {
-           let someVar = c * d;
+    let someVar = c * d;
 }
 
 

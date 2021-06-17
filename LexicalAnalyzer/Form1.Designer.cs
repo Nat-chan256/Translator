@@ -70,6 +70,13 @@
             this.label10 = new System.Windows.Forms.Label();
             this.rtbBasic = new System.Windows.Forms.RichTextBox();
             this.label11 = new System.Windows.Forms.Label();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.splitContainer4 = new System.Windows.Forms.SplitContainer();
+            this.bExecuteSyntAnTab = new System.Windows.Forms.Button();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.rtbSourceCodeSyntAnTab = new System.Windows.Forms.RichTextBox();
+            this.rtbSyntAnResult = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -93,6 +100,11 @@
             this.splitContainer3.Panel1.SuspendLayout();
             this.splitContainer3.Panel2.SuspendLayout();
             this.splitContainer3.SuspendLayout();
+            this.tabPage5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).BeginInit();
+            this.splitContainer4.Panel1.SuspendLayout();
+            this.splitContainer4.Panel2.SuspendLayout();
+            this.splitContainer4.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -154,7 +166,7 @@
             this.rtbLexemes.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.rtbLexemes.Location = new System.Drawing.Point(0, 23);
             this.rtbLexemes.Name = "rtbLexemes";
-            this.rtbLexemes.Size = new System.Drawing.Size(640, 431);
+            this.rtbLexemes.Size = new System.Drawing.Size(528, 431);
             this.rtbLexemes.TabIndex = 0;
             this.rtbLexemes.Text = "";
             // 
@@ -227,6 +239,7 @@
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 24);
             this.tabControl1.Name = "tabControl1";
@@ -530,6 +543,89 @@
             this.label11.TabIndex = 0;
             this.label11.Text = "Текст программы на языке Basic";
             // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.bExecuteSyntAnTab);
+            this.tabPage5.Controls.Add(this.splitContainer4);
+            this.tabPage5.Location = new System.Drawing.Point(4, 22);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Size = new System.Drawing.Size(1061, 523);
+            this.tabPage5.TabIndex = 4;
+            this.tabPage5.Text = "Синтаксический анализ";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // splitContainer4
+            // 
+            this.splitContainer4.Dock = System.Windows.Forms.DockStyle.Top;
+            this.splitContainer4.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer4.Name = "splitContainer4";
+            // 
+            // splitContainer4.Panel1
+            // 
+            this.splitContainer4.Panel1.Controls.Add(this.rtbSourceCodeSyntAnTab);
+            this.splitContainer4.Panel1.Controls.Add(this.label12);
+            // 
+            // splitContainer4.Panel2
+            // 
+            this.splitContainer4.Panel2.Controls.Add(this.rtbSyntAnResult);
+            this.splitContainer4.Panel2.Controls.Add(this.label13);
+            this.splitContainer4.Size = new System.Drawing.Size(1061, 463);
+            this.splitContainer4.SplitterDistance = 528;
+            this.splitContainer4.TabIndex = 0;
+            // 
+            // bExecuteSyntAnTab
+            // 
+            this.bExecuteSyntAnTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.bExecuteSyntAnTab.Location = new System.Drawing.Point(904, 469);
+            this.bExecuteSyntAnTab.Name = "bExecuteSyntAnTab";
+            this.bExecuteSyntAnTab.Size = new System.Drawing.Size(149, 38);
+            this.bExecuteSyntAnTab.TabIndex = 2;
+            this.bExecuteSyntAnTab.Text = "Выполнить";
+            this.bExecuteSyntAnTab.UseVisualStyleBackColor = true;
+            this.bExecuteSyntAnTab.Click += new System.EventHandler(this.bExecuteSyntAnTab_Click);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label12.Location = new System.Drawing.Point(0, 0);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(128, 20);
+            this.label12.TabIndex = 4;
+            this.label12.Text = "Код программы";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label13.Location = new System.Drawing.Point(0, 0);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(384, 20);
+            this.label13.TabIndex = 5;
+            this.label13.Text = "Результат работы синтаксического анализатора";
+            // 
+            // rtbSourceCodeSyntAnTab
+            // 
+            this.rtbSourceCodeSyntAnTab.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbSourceCodeSyntAnTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.rtbSourceCodeSyntAnTab.Location = new System.Drawing.Point(0, 20);
+            this.rtbSourceCodeSyntAnTab.Name = "rtbSourceCodeSyntAnTab";
+            this.rtbSourceCodeSyntAnTab.Size = new System.Drawing.Size(528, 443);
+            this.rtbSourceCodeSyntAnTab.TabIndex = 5;
+            this.rtbSourceCodeSyntAnTab.Text = "";
+            // 
+            // rtbSyntAnResult
+            // 
+            this.rtbSyntAnResult.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbSyntAnResult.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.rtbSyntAnResult.Location = new System.Drawing.Point(0, 20);
+            this.rtbSyntAnResult.Name = "rtbSyntAnResult";
+            this.rtbSyntAnResult.Size = new System.Drawing.Size(529, 443);
+            this.rtbSyntAnResult.TabIndex = 6;
+            this.rtbSyntAnResult.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -572,6 +668,13 @@
             this.splitContainer3.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
             this.splitContainer3.ResumeLayout(false);
+            this.tabPage5.ResumeLayout(false);
+            this.splitContainer4.Panel1.ResumeLayout(false);
+            this.splitContainer4.Panel1.PerformLayout();
+            this.splitContainer4.Panel2.ResumeLayout(false);
+            this.splitContainer4.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
+            this.splitContainer4.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -621,6 +724,13 @@
         private System.Windows.Forms.RichTextBox rtbBasic;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button btnExecuteBasicTranslationTab;
+        private System.Windows.Forms.TabPage tabPage5;
+        private System.Windows.Forms.Button bExecuteSyntAnTab;
+        private System.Windows.Forms.SplitContainer splitContainer4;
+        private System.Windows.Forms.RichTextBox rtbSourceCodeSyntAnTab;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.RichTextBox rtbSyntAnResult;
+        private System.Windows.Forms.Label label13;
     }
 }
 

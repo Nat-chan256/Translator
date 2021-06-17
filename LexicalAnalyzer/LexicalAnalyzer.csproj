@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Error.cs" />
     <Compile Include="Expression.cs" />
     <Compile Include="Operators\ArrayOperator.cs" />
     <Compile Include="Operators\CycleOperator.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="States\StringConstState.cs" />
     <Compile Include="States\TwoLiterOpState.cs" />
     <Compile Include="Operators\VariableDeclarationOperator.cs" />
+    <Compile Include="SyntacticalAnalyzer.cs" />
     <Compile Include="VariablesManager.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

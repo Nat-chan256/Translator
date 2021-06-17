@@ -19,6 +19,8 @@ namespace LexicalAnalyzer
         // Преобразователь ОПЗ в программу на Basic
         private RPNtoBasicConverter rpnToBasicConverter;
 
+        private SyntacticalAnalyzer syntacticalAnalyzer;
+
         public Form1()
         {
             InitializeComponent();
@@ -46,6 +48,7 @@ namespace LexicalAnalyzer
             rpnConverter = new RPNConverter();
 
             rpnToBasicConverter = new RPNtoBasicConverter();
+            syntacticalAnalyzer = new SyntacticalAnalyzer();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -174,6 +177,9 @@ namespace LexicalAnalyzer
             {
                 SetPerformButtonsEnable(false);
             }
+
+            // Переносим исходный код во вкладку "Синтаксический анализ"
+            rtbSourceCodeSyntAnTab.Text = rtbSourceCode.Text;
         }
 
 
@@ -336,6 +342,13 @@ namespace LexicalAnalyzer
             }
         }
 
+        //======================================Вкладка "Синтаксический анализ"===========================
+        private void bExecuteSyntAnTab_Click(object sender, EventArgs e)
+        {
+            string message = syntacticalAnalyzer.Process(rtbLexemes.Text.Split('\n'));
+            rtbSyntAnResult.Text = message;
+        }
+
         //======================================Вспомогательные методы====================================
 
         // Проверяет, есть ли в _listToCheck неизвестная лексема 
@@ -358,8 +371,8 @@ namespace LexicalAnalyzer
         private void SetPerformButtonsEnable(bool _value)
         {
             bExecuteRPN.Enabled = _value;
+            btnExecuteBasicTranslationTab.Enabled = _value;
+            bExecuteSyntAnTab.Enabled = _value;
         }
-
-        
     }
 }
