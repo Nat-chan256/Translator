@@ -71,7 +71,7 @@ namespace LexicalAnalyzer
         private void ArrayElement()
         {
             Scan();
-            Argument();
+            Expression();
             Scan();
             if (nxtSymb != "]")
             {
@@ -125,10 +125,15 @@ namespace LexicalAnalyzer
                 ExpressionWithoutComparisonOperator();
             }
 
+            Scan();
             // Проверка дополнительных условий, объединенных с помощью операторов || или &&
             if (new List<string> { "&&", "||", "&", "|" }.Contains(nxtSymb))
             {
                 Condition();
+            }
+            else
+            {
+                ScanBack();
             }
         }
 
@@ -141,6 +146,7 @@ namespace LexicalAnalyzer
                 Error();
             }
             Condition();
+            Scan();
             if (nxtSymb != ")")
             {
                 Error();
@@ -149,6 +155,7 @@ namespace LexicalAnalyzer
             Scan();
             if (nxtSymb == "{")
             {
+                Scan();
                 Text();
                 if (nxtSymb != "}")
                 {
@@ -170,6 +177,7 @@ namespace LexicalAnalyzer
                 }
                 else if (nxtSymb == "{")
                 {
+                    Scan();
                     Text();
                 }
                 else
@@ -221,6 +229,10 @@ namespace LexicalAnalyzer
                 {
                     Scan();
                 }
+                else if (cycleType == "while")
+                {
+                    ScanBack();
+                }
                 Condition();
                 Scan();
                 if (nxtSymb == ";" && cycleType == "for")
@@ -249,6 +261,7 @@ namespace LexicalAnalyzer
             Scan();
             if (nxtSymb == "{")
             {
+                Scan();
                 Text();
             }
             else
@@ -323,6 +336,7 @@ namespace LexicalAnalyzer
         // Текущий символ - начало выражения
         private void Expression()
         {
+            bool endedWithFunctionCall = false;
             while (nxtSymb == "(")
             {
                 bracketsLevel++;
@@ -404,12 +418,74 @@ namespace LexicalAnalyzer
                     }
                     ScanBack();
                 }
+                else if (nxtSymb == "[") // Обработка элемента массива
+                {
+                    ArrayElement();
+                    while (!(new List<string> { ";", "," }).Contains(nxtSymb) && !(bracketsLevel == 0 && nxtSymb == ")"))
+                    {
+                        Scan();
+                        if ((new List<string> { ";", ",", "]" }).Contains(nxtSymb) || (bracketsLevel == 0 && nxtSymb == ")"))
+                        {
+                            break;
+                        }
+                        if ((new List<string> { "(", ")" }).Contains(nxtSymb))
+                        {
+                            Scan();
+                            if (nxtSymb == "(")
+                            {
+                                bracketsLevel++;
+                            }
+                            else
+                            {
+                                bracketsLevel--;
+                            }
+                        }
+                        if (!IsOperator() && !IsComparisonOperator())
+                        {
+                            Error();
+                        }
+                        Scan();
+                        if (!IsArgument())
+                        {
+                            Error();
+                        }
+                        if (IsFunctionCall())
+                        {
+                            Scan();
+                            FunctionCall();
+                            endedWithFunctionCall = true;
+                        }
+                        else
+                        {
+                            endedWithFunctionCall = false;
+                        }
+                        if (IsArrayElement())
+                        {
+                            Scan();
+                            ArrayElement();
+                        }
+                    }
+                    if (!endedWithFunctionCall)
+                    {
+                        ScanBack();
+                    }
+                }
+                else if (nxtSymb == "]")
+                {
+                    ScanBack();
+                    return;
+                }
                 else if (IsOperator() || IsComparisonOperator())
                 {
                     Scan();
                     if (!IsArgument())
                     {
                         Error();
+                    }
+                    if (IsFunctionCall())
+                    {
+                        Scan();
+                        FunctionCall();
                     }
                     while (!(new List<string> { ";", "," }).Contains(nxtSymb) && !(bracketsLevel == 0 && nxtSymb == ")"))
                     {
@@ -427,8 +503,17 @@ namespace LexicalAnalyzer
                         {
                             Error();
                         }
+                        if (IsFunctionCall())
+                        {
+                            Scan();
+                            FunctionCall();
+                        }
                     }
                     ScanBack();
+                }
+                else if (IsArgument())
+                {
+                    Error();
                 }
                 else
                 {
@@ -462,6 +547,11 @@ namespace LexicalAnalyzer
                 {
                     Error();
                 }
+                if (IsFunctionCall())
+                {
+                    Scan();
+                    FunctionCall();
+                }
 
                 while (!(new List<string> { ";", "," }).Contains(nxtSymb) && !IsComparisonOperator() && !(bracketsLevel == 0 && nxtSymb == ")"))
                 {
@@ -491,11 +581,21 @@ namespace LexicalAnalyzer
                     {
                         Error();
                     }
+                    if (IsFunctionCall())
+                    {
+                        Scan();
+                        FunctionCall();
+                    }
                 }
                 ScanBack();
             }
             else if (IsArgument() && nxtSymb != "[")
             {
+                if (IsFunctionCall())
+                {
+                    Scan();
+                    FunctionCall();
+                }
                 Scan();
                 if (IsUnaryOperator())
                 {
@@ -527,6 +627,52 @@ namespace LexicalAnalyzer
                         {
                             Error();
                         }
+                        if (IsFunctionCall())
+                        {
+                            Scan();
+                            FunctionCall();
+                        }
+                    }
+                    ScanBack();
+                }
+                else if (nxtSymb == "[")
+                {
+                    ArrayElement();
+                    while (!(new List<string> { ";", "," }).Contains(nxtSymb) && !IsComparisonOperator() 
+                        && !(bracketsLevel == 0 && nxtSymb == ")"))
+                    {
+                        Scan();
+                        if ((new List<string> { ";", "," }).Contains(nxtSymb) || IsComparisonOperator() 
+                            || (bracketsLevel == 0 && nxtSymb == ")"))
+                        {
+                            break;
+                        }
+                        if ((new List<string> { "(", ")" }).Contains(nxtSymb))
+                        {
+                            Scan();
+                            if (nxtSymb == "(")
+                            {
+                                bracketsLevel++;
+                            }
+                            else
+                            {
+                                bracketsLevel--;
+                            }
+                        }
+                        if (!IsOperator())
+                        {
+                            Error();
+                        }
+                        Scan();
+                        if (!IsArgument())
+                        {
+                            Error();
+                        }
+                        if (IsFunctionCall())
+                        {
+                            Scan();
+                            FunctionCall();
+                        }
                     }
                     ScanBack();
                 }
@@ -536,6 +682,11 @@ namespace LexicalAnalyzer
                     if (!IsArgument())
                     {
                         Error();
+                    }
+                    if (IsFunctionCall())
+                    {
+                        Scan();
+                        FunctionCall();
                     }
                     while (!(new List<string> { ";", "," }).Contains(nxtSymb) && !IsComparisonOperator() && !(bracketsLevel == 0 && nxtSymb == ")"))
                     {
@@ -552,6 +703,11 @@ namespace LexicalAnalyzer
                         if (!IsArgument())
                         {
                             Error();
+                        }
+                        if (IsFunctionCall())
+                        {
+                            Scan();
+                            FunctionCall();
                         }
                     }
                     ScanBack();
@@ -616,9 +772,14 @@ namespace LexicalAnalyzer
         private void FunctionCall()
         {
             Scan();
-            if (nxtSymb != ")")
+            while (nxtSymb != ")")
             {
                 Expression();
+                Scan();
+                if (nxtSymb == ",")
+                {
+                    Scan();
+                }
             }
         }
 
@@ -666,6 +827,15 @@ namespace LexicalAnalyzer
             return result;
         }
 
+        // Текущий символ - имя массива
+        private bool IsArrayElement()
+        {
+            Scan();
+            bool result = nxtSymb == "[";
+            ScanBack();
+            return result;
+        }
+
         private bool IsAssigningOperator()
         {
             return (new List<string> { "=", "+=", "-=", "*=", "/=", "&=", "|=", "%=" }).Contains(nxtSymb);
@@ -679,6 +849,15 @@ namespace LexicalAnalyzer
         private bool IsConstant()
         {
             return lexemeCodes[i][j][0] == 'N' || lexemeCodes[i][j][0] == 'C';
+        }
+
+        // Текущий символ - имя функции
+        private bool IsFunctionCall()
+        {
+            Scan();
+            bool result = nxtSymb == "(";
+            ScanBack();
+            return result;
         }
 
         private bool IsIdentifier()
@@ -768,10 +947,7 @@ namespace LexicalAnalyzer
             }
 
             nxtSymb = GetLexemeByCode(lexemeCodes[i][j]);
-            if (nxtSymb == "for")
-            {
-                string debug = "DEBUG";
-            }
+            
             if (nxtSymb == null)
             {
                 Scan();
